@@ -1,0 +1,17 @@
+﻿<#@ assembly name="$(SolutionDir)MDM.Client\bin\debug\MDM.Contracts.dll" #>
+<#@ assembly name="$(SolutionDir)MDM.Client\bin\debug\MDM.Client.dll" #>
+<#@ assembly name="$(SolutionDir)MDM.Client\bin\debug\Nexus.Core.dll" #>
+
+<#@ import namespace="RWEST.Nexus.MDM.Contracts" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#
+	var prerequisiteContent = @"
+            entity.Details.ProductType = IntegrationTests.ProductType.ProductTypeData.PostBasicEntity().ToNexusId().ToEntityId();
+            entity.Details.Delivery = new DateRange { StartDate = new System.DateTime(2010, 01, 01), EndDate = new System.DateTime(2020, 01, 01) };
+	"; 
+	var entityNames = new List<Tuple<string, string, List<string>, string>>()
+    {
+        Tuple.Create("ProductTypeInstance", "ProductTypeInstanceDetails", new List<string> {"Name"},  prerequisiteContent)
+    };
+	
+#>

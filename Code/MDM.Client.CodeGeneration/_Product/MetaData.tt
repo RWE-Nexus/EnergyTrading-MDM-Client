@@ -1,0 +1,16 @@
+﻿<#@ assembly name="$(SolutionDir)MDM.Client\bin\debug\MDM.Contracts.dll" #>
+<#@ assembly name="$(SolutionDir)MDM.Client\bin\debug\MDM.Client.dll" #>
+<#@ assembly name="$(SolutionDir)MDM.Client\bin\debug\Nexus.Core.dll" #>
+
+<#@ import namespace="RWEST.Nexus.MDM.Contracts" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#
+	var prerequisiteContent = @"
+            entity.Details.Market = IntegrationTests.Market.MarketData.PostBasicEntity().ToNexusId().ToEntityId();
+	"; 
+	var entityNames = new List<Tuple<string, string, List<string>, string>>()
+    {
+        Tuple.Create("Product", "ProductDetails", new List<string> {"Name"},  prerequisiteContent)
+    };
+	
+#>

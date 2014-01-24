@@ -1,0 +1,14 @@
+﻿<#@ assembly name="$(SolutionDir)MDM.Client\bin\debug\MDM.Contracts.dll" #>
+<#@ assembly name="$(SolutionDir)MDM.Client\bin\debug\MDM.Client.dll" #>
+<#@ assembly name="$(SolutionDir)MDM.Client\bin\debug\Nexus.Core.dll" #>
+
+<#@ import namespace="RWEST.Nexus.MDM.Contracts" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#
+	var prerequisiteContent = @""; 
+	var entityNames = new List<Tuple<string, string, List<string>, string>>()
+    {
+        Tuple.Create("SourceSystem", "SourceSystemDetails", new List<string> {"Name"},  prerequisiteContent)
+    };
+	
+#>

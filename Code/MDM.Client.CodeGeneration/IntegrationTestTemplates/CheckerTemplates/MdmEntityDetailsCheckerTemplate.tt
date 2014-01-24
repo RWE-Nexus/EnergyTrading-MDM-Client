@@ -1,0 +1,35 @@
+﻿<#+
+// <copyright file="MdmEntityCheckerTemplate.tt" company="RWE">
+//  Copyright © RWE. All Rights Reserved.
+// </copyright>
+
+public class MdmEntityDetailsCheckerTemplate : CSharpTemplate
+{
+	public string EntityName { get; set;}
+	
+	public List<string> Properties { get; set;}
+
+	public override string TransformText()
+	{
+		base.TransformText();
+#>
+namespace MDM.Client.IntegrationTests.Checkers
+{
+    using RWEST.Nexus.MDM.Contracts;
+    using RWEST.Nexus.Test;
+
+    public class <#= EntityName #>Checker : Checker<<#= EntityName #>>
+    {
+        public <#= EntityName #>Checker()
+        {
+			<#+ foreach(var property in Properties) { #>
+            Compare(x => x.<#= property #>);
+			<#+ } #>
+        }
+    }
+}
+<#+
+        return this.GenerationEnvironment.ToString();
+	}
+}
+#>

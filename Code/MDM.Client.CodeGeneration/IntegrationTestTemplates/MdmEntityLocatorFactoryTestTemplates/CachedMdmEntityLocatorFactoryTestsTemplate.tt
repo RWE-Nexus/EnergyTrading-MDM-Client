@@ -1,0 +1,35 @@
+﻿<#+
+// <copyright file="CachedMdmEntityLocatorFactoryTestsTemplate.tt" company="RWE">
+//  Copyright © RWE. All Rights Reserved.
+// </copyright>
+
+public class CachedMdmEntityLocatorFactoryTestsTemplate : CSharpTemplate
+{
+	public string EntityName { get; set;}
+
+	public override string TransformText()
+	{
+		base.TransformText();
+#>
+namespace MDM.Client.IntegrationTests.<#= EntityName #>.MdmEntityLocatorFactory
+{
+	using System.Configuration;
+
+	using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+	[TestClass]
+	public class CachedMdmEntityLocatorFactoryTests : NonCachedMdmEntityLocatorFactoryTests
+	{
+		protected override void OnSetup()
+		{
+			ConfigurationManager.AppSettings["MdmCaching"] = true.ToString();
+
+			base.OnSetup();
+		}
+	}
+}
+<#+
+		return this.GenerationEnvironment.ToString();
+	}
+}
+#>
