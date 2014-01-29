@@ -42,7 +42,7 @@
         private static MethodInfo SearchMethod(string typeName)
         {
             var methodInfo = typeof (IMdmService).GetMethod("Search");
-            var fullTypeName = string.Format("RWEST.Nexus.MDM.Contracts.{0},MDM.Contracts", typeName);
+            var fullTypeName = string.Format("RWEST.Nexus.MDM.Contracts.{0},EnergyTrading.MDM.Contracts", typeName);
             return methodInfo.MakeGenericMethod(new[] {Type.GetType(fullTypeName)});
         }
 
