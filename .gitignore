@@ -1,0 +1,61 @@
+
+# /Code/
+/Code/_ReSharper.MDM.Client
+/Code/MDM.Client.suo
+/Code/MDM.Client.6.0.ReSharper.user
+/Code/*.suo
+/Code/*.Cache
+/Code/MDM.Client.sln.DotSettings.user
+/Code/*.ncrunchsolution
+/Code/MDM.Client.CodeGen.ncrunchsolution.user
+/Code/MDM.Client.ncrunchsolution.user
+/Code/TestResults
+/Code/*.user
+
+# /Code/MDM.Client/
+/Code/MDM.Client/[Bb]in
+/Code/MDM.Client/obj
+/Code/MDM.Client/[Dd]ebug
+/Code/MDM.Client/[Rr]elease
+/Code/MDM.Client/*.user
+/Code/MDM.Client/*.aps
+/Code/MDM.Client/*.eto
+/Code/MDM.Client/*.Cache
+
+# /Code/MDM.Client.CodeGeneration/
+/Code/MDM.Client.CodeGeneration/bin
+/Code/MDM.Client.CodeGeneration/obj
+
+# /Code/MDM.Client.IntegrationTests/
+/Code/MDM.Client.IntegrationTests/bin
+/Code/MDM.Client.IntegrationTests/*.Cache
+/Code/MDM.Client.IntegrationTests/obj
+
+# /Code/MDM.Client.PerformanceTests/
+/Code/MDM.Client.PerformanceTests/bin
+/Code/MDM.Client.PerformanceTests/obj
+/Code/MDM.Client.PerformanceTests/StyleCop.Cache
+
+# /Code/MDM.Client.Tests/
+/Code/MDM.Client.Tests/bin
+/Code/MDM.Client.Tests/obj
+/Code/MDM.Client.Tests/*.Cache
+/Code/MDM.Client.Tests/MDM.Client.Tests.csproj.user
+
+# /Code/packages/
+/Code/packages/CommonServiceLocator.*
+/Code/packages/EntityFramework.*
+/Code/packages/MDM.Contracts*
+/Code/packages/Microsoft.AspNet.WebApi.Client.*
+/Code/packages/Microsoft.Net.Http.*
+/Code/packages/Moq.*
+/Code/packages/Nexus.*
+/Code/packages/Newtonsoft.Json.*
+/Code/packages/NUnit.*
+/Code/packages/SharpTestsEx.*
+/Code/packages/XMLDiffPatch.*
+/Code/packages/Unity.*
+/Code/packages/Microsoft.Bcl.*
+/Code/packages/EnergyTrading.*
+
+# /Libs/
