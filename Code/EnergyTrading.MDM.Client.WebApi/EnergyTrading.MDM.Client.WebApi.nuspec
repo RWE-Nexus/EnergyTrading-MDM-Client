@@ -27,7 +27,5 @@
         <file src="Code\EnergyTrading.MDM.Client.WebApi\bin\Release\EnergyTrading.MDM.Client.WebApi.dll" target="lib\net40" />
         <file src="Code\EnergyTrading.MDM.Client.WebApi\bin\Release\EnergyTrading.MDM.Client.WebApi.pdb" target="lib\net40" />
         <file src="Code\EnergyTrading.MDM.Client.WebApi\bin\Release\EnergyTrading.MDM.Client.WebApi.xml" target="lib\net40" />        
-        <file src="Code\EnergyTrading.MDM.Client.WebApi\bin\Release\Microsoft.Http.dll" target="lib\net40" />
-        <file src="Code\EnergyTrading.MDM.Client.WebApi\bin\Release\Microsoft.Http.Extensions.dll" target="lib\net40" />        
     </files>
 </package>
