@@ -10,16 +10,16 @@
     using EnergyTrading.Mdm.Client.WebClient;
     using EnergyTrading.Mdm.Contracts;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using NUnit.Framework;
 
     using Moq;
 
     using SharpTestsEx;
 
-    [TestClass]
+    [TestFixture]
     public class CachePolicyMdmEntityServiceFixture
     {
-        [TestMethod]
+        [Test]
         public void ShouldCacheIfEntityHasBeenRetrievedById()
         {
             const string CacheKey = "MDM.SourceSystem";
@@ -57,7 +57,7 @@
             response.Message.ToMdmId().Identifier.Should().Be("1");
         }
 
-        [TestMethod]
+        [Test]
         public void ShouldRetrieveFromCacheIfClientRequestByNexusIdMapping()
         {
             const string CacheKey = "MDM.SourceSystem";
@@ -96,7 +96,7 @@
             response.Message.ToMdmId().Identifier.Should().Be(nexusId.Identifier);
         }
 
-        [TestMethod]
+        [Test]
         public void ShouldRetrieveFromCacheIfClientRequestBySystemMapping()
         {
             const string CacheKey = "MDM.SourceSystem";

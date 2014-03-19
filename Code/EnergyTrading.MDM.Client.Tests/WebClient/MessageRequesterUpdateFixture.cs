@@ -11,11 +11,11 @@ namespace EnergyTrading.Mdm.Client.Tests.WebClient
     using EnergyTrading.Mdm.Contracts;
     using EnergyTrading.Test;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using NUnit.Framework;
 
     using Moq;
 
-    [TestClass]
+    [TestFixture]
     public class when_a_call_is_made_to_the_message_requester_to_update_an_entity_and_it_succeeds : SpecBaseAutoMocking<MessageRequester>
     {
         private WebResponse<SourceSystem> response;
@@ -45,20 +45,20 @@ namespace EnergyTrading.Mdm.Client.Tests.WebClient
             this.response = this.Sut.Update("http://someuri/sourcesystem/1", "etagvalue", this.bob);
         }
 
-        [TestMethod]
+        [Test]
         public void should_return_a_valid_response()
         {
             Assert.AreEqual(this.response.IsValid, true); 
         }
 
-        [TestMethod]
+        [Test]
         public void should_return_a_ok_status_code()
         {
             Assert.AreEqual(HttpStatusCode.NoContent, this.response.Code);
         }
     }
 
-    [TestClass]
+    [TestFixture]
     public class when_a_call_is_made_to_the_message_requester_to_update_an_entity_and_a_fault_occurs : SpecBaseAutoMocking<MessageRequester>
     {
         private WebResponse<SourceSystem> response;
@@ -80,20 +80,20 @@ namespace EnergyTrading.Mdm.Client.Tests.WebClient
             this.response = this.Sut.Update("http://someuri/", "etagvalue", this.bob);
         }
 
-        [TestMethod]
+        [Test]
         public void should_return_the_fault_in_the_response()
         {
             Assert.AreEqual("Fault!", this.response.Fault.Message); 
         }
 
-        [TestMethod]
+        [Test]
         public void should_not_return_a_location()
         {
             Assert.AreEqual(null, this.response.Location);
         }
     }
 
-    [TestClass]
+    [TestFixture]
     public class when_a_call_is_made_to_the_message_requester_to_update_an_entity_and_an_exception_is_thrown_by_the_service : SpecBaseAutoMocking<MessageRequester>
     {
         private WebResponse<SourceSystem> response;
@@ -113,25 +113,25 @@ namespace EnergyTrading.Mdm.Client.Tests.WebClient
             this.response = this.Sut.Update<SourceSystem>("http://someuri/", "etagvalue", this.bob);
         }
 
-        [TestMethod]
+        [Test]
         public void should_return_a_fault_in_the_response()
         {
             Assert.IsNotNull(this.response.Fault.Message); 
         }
 
-        [TestMethod]
+        [Test]
         public void should_return_an_internal_server_error_code()
         {
             Assert.AreEqual(HttpStatusCode.InternalServerError, this.response.Code);
         }
 
-        [TestMethod]
+        [Test]
         public void should_mark_the_message_as_not_valid()
         {
             Assert.AreEqual(false, this.response.IsValid);
         }
 
-        [TestMethod]
+        [Test]
         public void should_return_the_excpetion_message_from_the_service()
         {
             Assert.IsTrue(this.response.Fault.Message.Contains("unkown exception"));

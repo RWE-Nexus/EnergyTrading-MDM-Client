@@ -10,11 +10,11 @@
     using EnergyTrading.Mdm.Contracts;
     using EnergyTrading.Search;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using NUnit.Framework;
 
     using Moq;
 
-    [TestClass]
+    [TestFixture]
     public class SearchCacheFixture
     {
         private CachePolicyMdmEntityService<SourceSystem> cacheService;
@@ -23,7 +23,7 @@
         private PagedWebResponse<IList<SourceSystem>> searchResult;
         private CacheItemPolicy policy;
         
-        [TestInitialize]
+        [SetUp]
         public void Setup()
         {
             this.mdmService = new Mock<IMdmEntityService<SourceSystem>>();
@@ -35,7 +35,7 @@
             this.cacheService = new CachePolicyMdmEntityService<SourceSystem>(this.mdmService.Object, this.policyFactory.Object);           
         }
 
-        [TestMethod]
+        [Test]
         public void ServiceInvokedOnFirstCall()
         {
             // Arrange
@@ -54,7 +54,7 @@
             this.mdmService.Verify(x => x.Search(search), Times.AtMostOnce());
         }
 
-        [TestMethod]
+        [Test]
         public void CacheUsedOnSecondCall()
         {
             // Arrange
@@ -74,7 +74,7 @@
             this.mdmService.Verify(x => x.Search(search), Times.AtMostOnce());
         }
 
-        [TestMethod]
+        [Test]
         public void InvalidResponseIsReturned()
         {
             // Arrange
@@ -92,7 +92,7 @@
             Assert.AreEqual(this.searchResult, result);
         }
 
-        [TestMethod]
+        [Test]
         public void InvalidResponseIsReturnedAndCached()
         {
             // Arrange

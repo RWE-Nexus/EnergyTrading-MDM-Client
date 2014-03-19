@@ -7,12 +7,12 @@
     using EnergyTrading.Mdm.Contracts;
     using EnergyTrading.Test;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using NUnit.Framework;
 
-    [TestClass]
+    [TestFixture]
     public class HandleResponseTransformFixture : Fixture
     {
-        [TestMethod]
+        [Test]
         public void ShouldReturnEmptyListOnNull()
         {
             WebResponse<IList<SourceSystem>> response = null;
@@ -23,7 +23,7 @@
             Assert.AreEqual(0, result.Count);
         }
 
-        [TestMethod]
+        [Test]
         public void ShouldReturnEmptyListIfInvalid()
         {
             var response = new WebResponse<IList<SourceSystem>>
@@ -38,7 +38,7 @@
             Assert.AreEqual(0, result.Count);
         }
 
-        [TestMethod]
+        [Test]
         public void ShouldTransformItemsInResponseIfValid()
         {
             var response = new WebResponse<IList<SourceSystem>>

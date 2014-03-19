@@ -7,9 +7,9 @@ namespace MDM.Client.IntegrationTests.SourceSystem.MdmEntityLocatorFactory
 {
 	using System.Configuration;
 
-	using Microsoft.VisualStudio.TestTools.UnitTesting;
+	using NUnit.Framework;
 
-	[TestClass]
+	[TestFixture]
 	public class CachedMdmEntityLocatorFactoryTests : NonCachedMdmEntityLocatorFactoryTests
 	{
 		protected override void OnSetup()

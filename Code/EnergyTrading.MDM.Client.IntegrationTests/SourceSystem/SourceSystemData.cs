@@ -8,7 +8,7 @@ namespace MDM.Client.IntegrationTests.SourceSystem
     using EnergyTrading.Mdm.Client.Services;
 
     using Microsoft.Practices.ServiceLocation;
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using NUnit.Framework;
 
     using EnergyTrading.Mdm.Contracts;
 

@@ -9,10 +9,10 @@ namespace MDM.Client.IntegrationTests.SourceSystem.MdmService
     using System.Linq;
     using System.Net;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using NUnit.Framework;
     using EnergyTrading.Mdm.Contracts;
 
-    [TestClass]
+    [TestFixture]
     public class MdmServiceBasicIntegrationTests : MdmServiceIntegrationTestBase
     {
         private SourceSystem sourcesystem;
@@ -26,7 +26,7 @@ namespace MDM.Client.IntegrationTests.SourceSystem.MdmService
             sourcesystem = SourceSystemData.PostBasicEntity();
         }
 
-        [TestMethod]
+        [Test]
         public void ShouldGetByIntId()
         {
             // given
@@ -40,7 +40,7 @@ namespace MDM.Client.IntegrationTests.SourceSystem.MdmService
             Check(sourcesystem, response.Message);
         }
 
-        [TestMethod]
+        [Test]
         public void ShouldGetByMdmId()
         {
             // given
@@ -54,7 +54,7 @@ namespace MDM.Client.IntegrationTests.SourceSystem.MdmService
             Check(sourcesystem, response.Message);
         }
 
-        [TestMethod]
+        [Test]
         public void ShouldGetMapping()
         {
             // given
@@ -68,7 +68,7 @@ namespace MDM.Client.IntegrationTests.SourceSystem.MdmService
             Assert.AreEqual(sourcesystem.Identifiers.First(i => i.SystemName == "Endur").Identifier, response.Message.Identifier);
         }
 
-        [TestMethod]
+        [Test]
         public void ShouldMap()
         {
             // given
@@ -82,7 +82,7 @@ namespace MDM.Client.IntegrationTests.SourceSystem.MdmService
             Assert.AreEqual(sourcesystem.Identifiers.First(i => i.SystemName == "Endur").Identifier, response.Message.Identifier);
         }
 
-        [TestMethod]
+        [Test]
         public void ShouldCrossMap()
         {
             // given

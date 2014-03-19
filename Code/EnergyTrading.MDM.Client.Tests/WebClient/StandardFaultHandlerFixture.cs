@@ -9,9 +9,9 @@
     using EnergyTrading.Mdm.Contracts;
     using EnergyTrading.Test;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using NUnit.Framework;
 
-    [TestClass]
+    [TestFixture]
     public class using_a_StandardFaultHandler_when_a_response_has_a_different_status_code_to_the_one_expected : SpecBase<StandardFaultHandler>
     {
         private bool result;
@@ -39,7 +39,7 @@
             }
         }
 
-        [TestMethod]
+        [Test]
         public void should_return_false()
         {
             Assert.AreEqual(false, this.result);

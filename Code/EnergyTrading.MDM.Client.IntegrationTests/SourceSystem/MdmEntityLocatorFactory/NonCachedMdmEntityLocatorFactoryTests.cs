@@ -8,11 +8,11 @@ namespace MDM.Client.IntegrationTests.SourceSystem.MdmEntityLocatorFactory
 	using System.Configuration;
     using System.Linq;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using NUnit.Framework;
 
     using EnergyTrading.Mdm.Contracts;
 
-    [TestClass]
+    [TestFixture]
     public class NonCachedMdmEntityLocatorFactoryTests : MdmEntityLocatorFactoryIntegrationTestBase
     {
         private SourceSystem expected;
@@ -26,7 +26,7 @@ namespace MDM.Client.IntegrationTests.SourceSystem.MdmEntityLocatorFactory
             expected = SourceSystemData.PostBasicEntity();
         }
 
-        [TestMethod]
+        [Test]
         public void ShouldSuccessfullyLocateEntity()
         {
             // given
@@ -39,7 +39,7 @@ namespace MDM.Client.IntegrationTests.SourceSystem.MdmEntityLocatorFactory
             this.Check(expected, candidate);
         }
 
-        [TestMethod]
+        [Test]
         public void ShouldReturnDefaultWhenUnableToLocateEntity()
         {
             // given

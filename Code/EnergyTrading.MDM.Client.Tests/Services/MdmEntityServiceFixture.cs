@@ -8,14 +8,14 @@
     using EnergyTrading.Mdm.Contracts;
     using EnergyTrading.Test;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using NUnit.Framework;
 
     using Moq;
 
-    [TestClass]
+    [TestFixture]
     public class MdmEntityServiceFixture : Fixture
     {
-        [TestMethod]
+        [Test]
         public void GetMissingEntityById()
         {
             var requester = new Mock<IMessageRequester>();
@@ -38,7 +38,7 @@
             Assert.AreSame(response, candidate);
         }
 
-        [TestMethod]
+        [Test]
         public void GetById()
         {
             var requester = new Mock<IMessageRequester>();
@@ -73,7 +73,7 @@
             Assert.AreSame(expected, candidate, "Entities differ");
         }
 
-        [TestMethod]
+        [Test]
         public void GetByIdValidAt()
         {
             var requester = new Mock<IMessageRequester>();
@@ -111,7 +111,7 @@
             requester.Verify(x => x.Request<SourceSystem>(It.Is<string>(s => s.Split('?')[1].Contains("as-of=" + now.ToString(dateFormatString)))), Times.Once());
         }
 
-        [TestMethod]
+        [Test]
         public void GetByMapping()
         {
             var requester = new Mock<IMessageRequester>();
@@ -147,7 +147,7 @@
             Assert.AreSame(expected, candidate, "Entities differ");            
         }
 
-        [TestMethod]
+        [Test]
         public void GetByMappingUrlEncodesCorrectly()
         {
             var requester = new Mock<IMessageRequester>();
@@ -182,7 +182,7 @@
         }
 
 
-        [TestMethod]
+        [Test]
         public void DeleteMapping()
         {
             var requester = new Mock<IMessageRequester>();
@@ -198,7 +198,7 @@
             Assert.AreEqual(true, result.IsValid, "IsValid differ");            
         }
 
-        [TestMethod]
+        [Test]
         public void DeleteMappingFails()
         {
             var requester = new Mock<IMessageRequester>();
@@ -216,7 +216,7 @@
             Assert.AreEqual(fault, result.Fault, "Fault not returned");
         }
 
-        [TestMethod]
+        [Test]
         public void CreateEntity()
         {
             var requester = new Mock<IMessageRequester>();
@@ -241,7 +241,7 @@
             Assert.AreEqual(true, result.IsValid, "IsValid differ");            
         }
 
-        [TestMethod]
+        [Test]
         public void CreateEntityFails()
         {
             var requester = new Mock<IMessageRequester>();
@@ -259,7 +259,7 @@
             Assert.AreEqual(fault, result.Fault, "Fault not returned");
         }
 
-        [TestMethod]
+        [Test]
         public void GetMapping()
         {
             var requester = new Mock<IMessageRequester>();
@@ -298,7 +298,7 @@
             Assert.AreSame(tpIdentifier, candidate.Message, "Message differs");
         }
 
-        [TestMethod]
+        [Test]
         public void GetMappingMissingEntity()
         {
             var requester = new Mock<IMessageRequester>();
@@ -320,7 +320,7 @@
             Assert.AreEqual(false, candidate.IsValid, "IsValid differs");
         }
 
-        [TestMethod]
+        [Test]
         public void GetMappingMissingSystemId()
         {
             var requester = new Mock<IMessageRequester>();

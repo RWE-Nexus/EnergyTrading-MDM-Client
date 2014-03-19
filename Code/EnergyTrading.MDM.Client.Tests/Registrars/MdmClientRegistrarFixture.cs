@@ -7,16 +7,16 @@
 
     using Microsoft.Practices.ServiceLocation;
     using Microsoft.Practices.Unity;
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using NUnit.Framework;
 
     using Moq;
 
-    [TestClass]
+    [TestFixture]
     public class MdmClientRegistrarFixture
     {
         private IUnityContainer container;
 
-        [TestInitialize]
+        [SetUp]
         public void Setup()
         {
             this.container = new UnityContainer();
@@ -25,19 +25,19 @@
             new MdmClientRegistrar().Register(this.container);
         }
 
-        [TestMethod]
+        [Test]
         public void CanResolveHttpClientFactory()
         {
             this.container.Resolve<IHttpClientFactory>();
         }
 
-        [TestMethod]
+        [Test]
         public void CanResolveMessageRequester()
         {
             this.container.Resolve<IMessageRequester>();
         }
 
-        [TestMethod]
+        [Test]
         public void CanResolveMdmModelEntityService()
         {
             this.container.Resolve<IMdmModelEntityService>();

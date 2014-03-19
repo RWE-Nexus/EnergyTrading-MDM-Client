@@ -9,10 +9,10 @@ namespace MDM.Client.IntegrationTests.SourceSystem.MdmService
     using System.Linq;
     using System.Net;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using NUnit.Framework;
     using EnergyTrading.Mdm.Contracts;
 
-    [TestClass]
+    [TestFixture]
     public class MdmServiceEntityUpdateIntegrationTests : MdmServiceIntegrationTestBase
     {
         private SourceSystem sourcesystem;
@@ -26,7 +26,7 @@ namespace MDM.Client.IntegrationTests.SourceSystem.MdmService
             sourcesystem = SourceSystemData.PostBasicEntity();
         }
 	
-        [TestMethod]
+        [Test]
         public void ShouldSucceedUpdateWhenETagMatches()
         {
             // given
@@ -42,7 +42,7 @@ namespace MDM.Client.IntegrationTests.SourceSystem.MdmService
             Assert.IsTrue(response.IsValid, "###Error : " + response.Code + " : " + (response.Fault == null ? string.Empty : response.Fault.Message + " : " + response.Fault.Reason));
         }
 
-        [TestMethod]
+        [Test]
         public void ShouldFailUpdateWhenETagDiffers()
         {
             // given

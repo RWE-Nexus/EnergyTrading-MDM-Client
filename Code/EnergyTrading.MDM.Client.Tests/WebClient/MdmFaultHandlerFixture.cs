@@ -9,9 +9,9 @@ namespace EnergyTrading.Mdm.Client.Tests.WebClient
     using EnergyTrading.Mdm.Contracts;
     using EnergyTrading.Test;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using NUnit.Framework;
 
-    [TestClass]
+    [TestFixture]
     public class when_the_MdmFaulHandler_has_a_different_status_code_to_the_one_expected : SpecBase<MdmFaultHandler>
     {
         private MdmFaultException exception;
@@ -42,16 +42,16 @@ namespace EnergyTrading.Mdm.Client.Tests.WebClient
             }
         }
 
-        [TestMethod]
+        [Test]
         public void should_return_the_fault_data()
         {
             Assert.AreEqual(this.fault.Message, this.exception.Fault.Message);
         }
 
-        [TestMethod]
+        [Test]
         public void should_throw_a_fault_exception()
         {
-            Assert.IsInstanceOfType(this.exception, typeof(MdmFaultException));
+            Assert.IsInstanceOf<MdmFaultException>(this.exception);
         }
     }
 }

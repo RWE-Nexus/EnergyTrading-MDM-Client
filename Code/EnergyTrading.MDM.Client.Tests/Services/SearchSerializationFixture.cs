@@ -4,15 +4,15 @@
     using EnergyTrading.Search;
     using EnergyTrading.Xml.Serialization;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using NUnit.Framework;
 
     /// <summary>
     /// Check Search serialization as we want to rely on it in caching
     /// </summary>
-    [TestClass]
+    [TestFixture]
     public class SearchSerializationFixture
     {
-        [TestMethod]
+        [Test]
         public void SameContentHasSameSerialization()
         {
             var searchA = SearchBuilder.CreateSearch();
@@ -31,7 +31,7 @@
             Assert.AreEqual(expected, candidate);
         }
 
-        [TestMethod]
+        [Test]
         public void DifferContentHasDifferentSerialization()
         {
             var searchA = SearchBuilder.CreateSearch();
