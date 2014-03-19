@@ -1,0 +1,51 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{10969455-ABDA-4F5F-B43C-8007DD831691}"
+	ProjectSection(SolutionItems) = preProject
+		EnergyTrading.MDM.Client.vsmdi = EnergyTrading.MDM.Client.vsmdi
+		Local.testsettings = Local.testsettings
+		TraceAndTestImpact.testsettings = TraceAndTestImpact.testsettings
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnergyTrading.MDM.Client", "EnergyTrading.MDM.Client\EnergyTrading.MDM.Client.csproj", "{1ACA2F39-8645-4B9C-BB3A-025B8844F2AA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnergyTrading.MDM.Client.Tests", "EnergyTrading.MDM.Client.Tests\EnergyTrading.MDM.Client.Tests.csproj", "{90C2A737-A6EA-440E-9257-376DCFDB69F4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnergyTrading.MDM.Client.WebApi", "EnergyTrading.MDM.Client.WebApi\EnergyTrading.MDM.Client.WebApi.csproj", "{E480BBDD-79E8-4520-9160-1BBD810A7742}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnergyTrading.MDM.Client.IntegrationTests", "EnergyTrading.MDM.Client.IntegrationTests\EnergyTrading.MDM.Client.IntegrationTests.csproj", "{422BAA51-650A-41FF-898B-0F5E9602BE09}"
+EndProject
+Global
+	GlobalSection(TestCaseManagementSettings) = postSolution
+		CategoryFile = MDM.Client.vsmdi
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1ACA2F39-8645-4B9C-BB3A-025B8844F2AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1ACA2F39-8645-4B9C-BB3A-025B8844F2AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1ACA2F39-8645-4B9C-BB3A-025B8844F2AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1ACA2F39-8645-4B9C-BB3A-025B8844F2AA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90C2A737-A6EA-440E-9257-376DCFDB69F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90C2A737-A6EA-440E-9257-376DCFDB69F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90C2A737-A6EA-440E-9257-376DCFDB69F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90C2A737-A6EA-440E-9257-376DCFDB69F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E480BBDD-79E8-4520-9160-1BBD810A7742}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E480BBDD-79E8-4520-9160-1BBD810A7742}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E480BBDD-79E8-4520-9160-1BBD810A7742}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E480BBDD-79E8-4520-9160-1BBD810A7742}.Release|Any CPU.Build.0 = Release|Any CPU
+		{422BAA51-650A-41FF-898B-0F5E9602BE09}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{422BAA51-650A-41FF-898B-0F5E9602BE09}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{422BAA51-650A-41FF-898B-0F5E9602BE09}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{422BAA51-650A-41FF-898B-0F5E9602BE09}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.0\lib\NET35;packages\Unity.Interception.2.1.505.0\lib\NET35;packages\EnterpriseLibrary.Common.5.0.505.0\lib\NET35;packages\EnterpriseLibrary.Logging.5.0.505.1\lib\NET35;packages\Unity.2.1.505.2\lib\NET35
+	EndGlobalSection
+EndGlobal
