@@ -1,7 +1,7 @@
 using System.Reflection;
 
 [assembly: AssemblyCompany("RWEST")]
-[assembly: AssemblyProduct("MDM.Client")]
-[assembly: AssemblyCopyright("Copyright © RWEST 2010-2012")]
+[assembly: AssemblyProduct("EnergyTrading.MDM.Client")]
+[assembly: AssemblyCopyright("Copyright © RWEST 2014")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
