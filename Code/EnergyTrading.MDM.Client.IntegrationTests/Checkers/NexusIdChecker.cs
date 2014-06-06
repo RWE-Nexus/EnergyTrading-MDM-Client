@@ -1,4 +1,4 @@
-﻿namespace MDM.Client.IntegrationTests.Checkers
+﻿namespace EnergyTrading.Mdm.Client.IntegrationTests.Checkers
 {
     using EnergyTrading.Mdm.Contracts;
     using EnergyTrading.Test;

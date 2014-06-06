@@ -10,9 +10,9 @@
     using EnergyTrading.Mdm.Client.WebClient;
     using EnergyTrading.Mdm.Contracts;
 
-    using NUnit.Framework;
-
     using Moq;
+
+    using NUnit.Framework;
 
     using SharpTestsEx;
 

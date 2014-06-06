@@ -10,9 +10,9 @@
     using EnergyTrading.Mdm.Contracts;
     using EnergyTrading.Search;
 
-    using NUnit.Framework;
-
     using Moq;
+
+    using NUnit.Framework;
 
     [TestFixture]
     public class SearchCacheFixture

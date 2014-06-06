@@ -8,9 +8,9 @@
     using EnergyTrading.Mdm.Contracts;
     using EnergyTrading.Test;
 
-    using NUnit.Framework;
-
     using Moq;
+
+    using NUnit.Framework;
 
     [TestFixture]
     public class MdmEntityServiceFixture : Fixture

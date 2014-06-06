@@ -10,9 +10,9 @@ namespace EnergyTrading.Mdm.Client.Tests.WebClient
     using EnergyTrading.Mdm.Contracts;
     using EnergyTrading.Test;
 
-    using NUnit.Framework;
-
     using Moq;
+
+    using NUnit.Framework;
 
     [TestFixture]
     public class when_a_call_is_made_to_the_message_requester_to_delete_an_mapping_and_it_succeeds : SpecBaseAutoMocking<MessageRequester>

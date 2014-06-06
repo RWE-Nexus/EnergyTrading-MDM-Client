@@ -1,12 +1,11 @@
-﻿using EnergyTrading.Container.Unity;
-
-using Microsoft.Practices.ServiceLocation;
-
-namespace MDM.Client.IntegrationTests
+﻿namespace EnergyTrading.Mdm.Client.IntegrationTests
 {
+    using EnergyTrading.Container.Unity;
     using EnergyTrading.Logging;
     using EnergyTrading.Mdm.Client.WebApi.Registrars;
     using EnergyTrading.Test;
+
+    using Microsoft.Practices.ServiceLocation;
 
     public abstract class IntegrationTestBase : Fixture
     {

@@ -1,4 +1,4 @@
-﻿namespace MDM.Client.IntegrationTests
+﻿namespace EnergyTrading.Mdm.Client.IntegrationTests
 {
     using EnergyTrading.Mdm.Client.Services;
 

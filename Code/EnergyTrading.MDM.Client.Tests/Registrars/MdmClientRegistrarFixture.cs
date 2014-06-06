@@ -7,9 +7,10 @@
 
     using Microsoft.Practices.ServiceLocation;
     using Microsoft.Practices.Unity;
-    using NUnit.Framework;
 
     using Moq;
+
+    using NUnit.Framework;
 
     [TestFixture]
     public class MdmClientRegistrarFixture
