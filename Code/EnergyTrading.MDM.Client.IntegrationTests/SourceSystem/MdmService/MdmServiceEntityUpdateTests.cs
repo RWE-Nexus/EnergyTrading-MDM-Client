@@ -55,7 +55,7 @@ namespace EnergyTrading.Mdm.Client.IntegrationTests.SourceSystem.MdmService
             response = MdmService.Update(id, response.Message, "\"999888777666555\"");
             Assert.IsFalse(response.IsValid);
             Assert.AreEqual(HttpStatusCode.PreconditionFailed, response.Code);
-            Assert.AreEqual("Exception of type 'EnergyTrading.MDM.Services.VersionConflictException' was thrown.", response.Fault.Message);
+            Assert.AreEqual("Exception of type 'EnergyTrading.Mdm.Services.VersionConflictException' was thrown.", response.Fault.Message);
         }
     }
 }
