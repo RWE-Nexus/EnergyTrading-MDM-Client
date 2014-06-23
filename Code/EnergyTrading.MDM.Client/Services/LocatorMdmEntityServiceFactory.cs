@@ -16,13 +16,13 @@
             this.cache = new ConcurrentDictionary<Type, object>();
         }
 
-        public IMdmEntityService<TContract> EntityService<TContract>() where TContract : EnergyTrading.Mdm.Contracts.IMdmEntity
+        public IMdmEntityService<TContract> EntityService<TContract>(uint version = 0) where TContract : EnergyTrading.Mdm.Contracts.IMdmEntity
         {
             var type = typeof(TContract);
             object value;
             if (!this.cache.TryGetValue(type, out value))
             {
-                value = this.locator.GetInstance<IMdmEntityService<TContract>>();
+                value = version == 0 ? this.locator.GetInstance<IMdmEntityService<TContract>>() : this.locator.GetInstance<IMdmEntityService<TContract>>("V" + version);
                 this.cache.AddOrUpdate(type, value, (x, y) => value);
             }
 
