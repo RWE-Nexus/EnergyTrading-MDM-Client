@@ -84,19 +84,22 @@
 
                 container.RegisterAbsoluteCacheItemPolicyFactory(cachekey);
 
+                // url is different for different versions so can still use it here
                 container.RegisterType<IMdmEntityService<T>, MdmEntityService<T>>(
                     url,
                     new InjectionConstructor(
                         this.BaseUri + "/" + url,
                         new ResolvedParameter<IMessageRequester>()));
 
-                // Singleton as we have a cache
-                container.RegisterType<IMdmEntityService<T>, CachePolicyMdmEntityService<T>>(
-                    new ContainerControlledLifetimeManager(),
-                    new InjectionConstructor(
-                        new ResolvedParameter<IMdmEntityService<T>>(url),
-                        new ResolvedParameter<ICacheItemPolicyFactory>(cachekey),
-                        version));
+                // Singleton as we have a cache but named according to version if necessary
+                if (version == 0)
+                {
+                    container.RegisterType<IMdmEntityService<T>, CachePolicyMdmEntityService<T>>(new ContainerControlledLifetimeManager(), new InjectionConstructor(new ResolvedParameter<IMdmEntityService<T>>(url), new ResolvedParameter<ICacheItemPolicyFactory>(cachekey), version));
+                }
+                else
+                {
+                    container.RegisterType<IMdmEntityService<T>, CachePolicyMdmEntityService<T>>("V" + version, new ContainerControlledLifetimeManager(), new InjectionConstructor(new ResolvedParameter<IMdmEntityService<T>>(url), new ResolvedParameter<ICacheItemPolicyFactory>(cachekey), version));
+                }
             }
             else
             {
