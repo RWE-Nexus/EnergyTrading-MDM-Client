@@ -75,12 +75,12 @@
         {
         }
 
-        protected virtual void RegisterMdmService<T>(IUnityContainer container, string url)
+        protected virtual void RegisterMdmService<T>(IUnityContainer container, string url, uint version = 0)
             where T : class, IMdmEntity
         {
             if (this.MdmCaching)
             {
-                var cachekey = "Mdm." + typeof(T).Name;
+                var cachekey = version + "Mdm." + typeof(T).Name;
 
                 container.RegisterAbsoluteCacheItemPolicyFactory(cachekey);
 
@@ -95,12 +95,20 @@
                     new ContainerControlledLifetimeManager(),
                     new InjectionConstructor(
                         new ResolvedParameter<IMdmEntityService<T>>(url),
-                        new ResolvedParameter<ICacheItemPolicyFactory>(cachekey)));
+                        new ResolvedParameter<ICacheItemPolicyFactory>(cachekey),
+                        version));
             }
             else
             {
-                container.RegisterType<IMdmEntityService<T>, MdmEntityService<T>>(
-                    new InjectionConstructor(this.BaseUri + "/" + url, new ResolvedParameter<IMessageRequester>()));
+                if (version == 0)
+                {
+                    container.RegisterType<IMdmEntityService<T>, MdmEntityService<T>>(new InjectionConstructor(this.BaseUri + "/" + url, new ResolvedParameter<IMessageRequester>()));
+                }
+                else
+                {
+                    container.RegisterType<IMdmEntityService<T>, MdmEntityService<T>>("V" + version, new InjectionConstructor(this.BaseUri + "/" + url, new ResolvedParameter<IMessageRequester>()));
+                }
+
             }
         }
 
