@@ -48,7 +48,7 @@
         public WebResponse<TContract> Get<TContract>(int id, uint version = 0)
             where TContract : IMdmEntity
         {
-            return this.Get<TContract>(id, null);
+            return this.Get<TContract>(id, null, version);
         }
 
         public WebResponse<IList<TContract>> GetList<TContract>(int id, uint version = 0) where TContract : IMdmEntity
@@ -73,7 +73,7 @@
         public WebResponse<TContract> Get<TContract>(MdmId identifier, uint version = 0)
             where TContract : IMdmEntity
         {
-            return this.Get<TContract>(identifier, null);
+            return this.Get<TContract>(identifier, null, version);
         }
 
         public WebResponse<TContract> Get<TContract>(MdmId identifier, DateTime? asof, uint version = 0)
