@@ -38,7 +38,7 @@
         public CachePolicyMdmEntityService(IMdmEntityService<TContract> service, ICacheItemPolicyFactory cacheItemPolicyFactory, uint version = 0)
         {
             this.service = service;
-            this.cache = new MemoryCache(version + "Mdm." + typeof(TContract).Name);
+            this.cache = new MemoryCache("Mdm." + typeof(TContract).Name + (version > 0 ? "V" + version : string.Empty));
             this.cacheItemPolicyFactory = cacheItemPolicyFactory;
             this.mappings = new Dictionary<MdmId, int>();
             this.etags = new Dictionary<int, string>();

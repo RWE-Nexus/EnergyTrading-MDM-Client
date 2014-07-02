@@ -80,7 +80,7 @@
         {
             if (this.MdmCaching)
             {
-                var cachekey = version + "Mdm." + typeof(T).Name;
+                var cachekey = "Mdm." + typeof(T).Name + (version > 0 ? "V" + version : string.Empty);
 
                 container.RegisterAbsoluteCacheItemPolicyFactory(cachekey);
 
