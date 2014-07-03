@@ -1,4 +1,6 @@
-﻿namespace EnergyTrading.Mdm.Client.WebApi.Registrars
+﻿using EnergyTrading.Caching.InMemory.Registrars;
+
+namespace EnergyTrading.Mdm.Client.WebApi.Registrars
 {
     using System.Configuration;
     using System.Linq;
@@ -43,6 +45,10 @@
         {
             // Http clients
             container.RegisterType<IHttpClientFactory, HttpClientFactory>();
+
+
+            //Register Cache service
+            InMemoryCacheRegistrar.Register(container);
 
             // Requester
             container.RegisterType<IMessageRequester, MessageRequester>();
@@ -94,11 +100,11 @@
                 // Singleton as we have a cache but named according to version if necessary
                 if (version == 0)
                 {
-                    container.RegisterType<IMdmEntityService<T>, CachePolicyMdmEntityService<T>>(new ContainerControlledLifetimeManager(), new InjectionConstructor(new ResolvedParameter<IMdmEntityService<T>>(url), new ResolvedParameter<ICacheItemPolicyFactory>(cachekey), version));
+                    container.RegisterType<IMdmEntityService<T>, CachePolicyMdmEntityService<T>>(new ContainerControlledLifetimeManager(), new InjectionConstructor(new ResolvedParameter<IMdmEntityService<T>>(url), new ResolvedParameter<ICacheItemPolicyFactory>(cachekey), new ResolvedParameter<ICacheRepository>(), version));
                 }
                 else
                 {
-                    container.RegisterType<IMdmEntityService<T>, CachePolicyMdmEntityService<T>>("V" + version, new ContainerControlledLifetimeManager(), new InjectionConstructor(new ResolvedParameter<IMdmEntityService<T>>(url), new ResolvedParameter<ICacheItemPolicyFactory>(cachekey), version));
+                    container.RegisterType<IMdmEntityService<T>, CachePolicyMdmEntityService<T>>("V" + version, new ContainerControlledLifetimeManager(), new InjectionConstructor(new ResolvedParameter<IMdmEntityService<T>>(url), new ResolvedParameter<ICacheItemPolicyFactory>(cachekey), new ResolvedParameter<ICacheRepository>(), version));
                 }
             }
             else

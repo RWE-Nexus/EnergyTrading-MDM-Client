@@ -23,28 +23,33 @@
         private readonly static ILogger Logger = LoggerFactory.GetLogger(typeof(CachePolicyMdmEntityService<TContract>));
 
         private readonly IMdmEntityService<TContract> service;
-        private readonly MemoryCache cache;
+        private readonly ICacheService cache;
         private readonly ICacheItemPolicyFactory cacheItemPolicyFactory;
         private readonly Dictionary<MdmId, int> mappings;
         private readonly Dictionary<int, string> etags;
         private readonly string entityName;
         private readonly object syncLock;
+        private readonly ICacheRepository cacheRepository;
 
         /// <summary>
         /// Create a new instance of the <see cref="CachePolicyMdmEntityService{T}" /> class.
         /// </summary>
         /// <param name="service"></param>
         /// <param name="cacheItemPolicyFactory"></param>
-        public CachePolicyMdmEntityService(IMdmEntityService<TContract> service, ICacheItemPolicyFactory cacheItemPolicyFactory, uint version = 0)
+        public CachePolicyMdmEntityService(IMdmEntityService<TContract> service, ICacheItemPolicyFactory cacheItemPolicyFactory,ICacheRepository cacheRepository, uint version = 0)
         {
             this.service = service;
-            this.cache = new MemoryCache("Mdm." + typeof(TContract).Name + (version > 0 ? "V" + version : string.Empty));
+            this.cacheName = "Mdm." + typeof(TContract).Name + (version > 0 ? "V" + version : string.Empty);
+            this.cacheRepository = cacheRepository;
+            this.cache = cacheRepository.GetNamedCache(cacheName);
             this.cacheItemPolicyFactory = cacheItemPolicyFactory;
             this.mappings = new Dictionary<MdmId, int>();
             this.etags = new Dictionary<int, string>();
             this.syncLock = new object();
             this.entityName = typeof(TContract).Name;
         }
+
+        private string cacheName { get; set; }
 
         public int Count
         {
@@ -61,6 +66,10 @@
         /// </summary>
         public void Clear()
         {
+            if (cacheRepository != null && !string.IsNullOrEmpty(cacheName))
+            {
+                cacheRepository.RemoveNamedCache(cacheName);
+            }
         }
 
         /// <copydocfrom cref="IMdmEntityService{T}.Get(int)" />
@@ -405,12 +414,12 @@
 
         private TContract CheckCache(int id)
         {
-            return this.cache.Get(id.ToString(CultureInfo.InvariantCulture)) as TContract;
+            return this.cache.Get<TContract>(id.ToString(CultureInfo.InvariantCulture));
         }
 
         private PagedWebResponse<IList<TContract>> CheckSearchCache(string key)
         {
-            return this.cache.Get(key) as PagedWebResponse<IList<TContract>>;
+            return this.cache.Get<PagedWebResponse<IList<TContract>>>(key);
         }
 
         private string ToSearchKey(Search search)
