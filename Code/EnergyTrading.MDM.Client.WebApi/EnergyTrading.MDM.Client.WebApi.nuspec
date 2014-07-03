@@ -20,6 +20,7 @@
             <dependency id="Microsoft.AspNet.WebApi.Client" version="" />
             <dependency id="Microsoft.Net.Http" version="" />
             <dependency id="Newtonsoft.Json" />
+			<dependency id="EnergyTrading.Caching.InMemory" />
         </dependencies>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
     </metadata>
