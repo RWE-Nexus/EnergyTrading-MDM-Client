@@ -12,8 +12,9 @@
         /// </summary>
         /// <typeparam name="TContract">Type of contract to find</typeparam>
         /// <param name="id">Identifier to use</param>
+        /// <param name="version">contract version default = 0</param>
         /// <returns>MDM contract if found, null otherwise</returns>
-        TContract Get<TContract>(MdmId id) 
+        TContract Get<TContract>(MdmId id, uint version = 0) 
             where TContract : IMdmEntity;
     }
 }

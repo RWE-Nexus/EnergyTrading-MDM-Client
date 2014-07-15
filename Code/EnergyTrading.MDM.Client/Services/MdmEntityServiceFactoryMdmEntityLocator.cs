@@ -4,29 +4,29 @@
     using EnergyTrading.Mdm.Contracts;
 
     /// <summary>
-    /// Uses an <see cref="IMdmEntityService{T}" /> for entity location.
+    /// Uses an <see cref="IMdmEntityServiceFactory" /> for entity location.
     /// </summary>
-    public class MdmServiceMdmEntityLocator<TContract> : IMdmEntityLocator<TContract>
+    public class MdmEntityServiceFactoryMdmEntityLocator<TContract> : IMdmEntityLocator<TContract>
         where TContract : class, IMdmEntity
     {
         /// <summary>
         /// Create a new instance of the <see cref="MdmServiceMdmEntityLocator{T}"/> class.
         /// </summary>
         /// <param name="service"></param>
-        public MdmServiceMdmEntityLocator(IMdmEntityService<TContract> service)
+        public MdmEntityServiceFactoryMdmEntityLocator(IMdmEntityServiceFactory factory)
         {
-            this.Service = service;
+            this.Factory = factory;
         }
 
         /// <summary>
         /// Gets the Service property.
         /// </summary>
-        protected IMdmEntityService<TContract> Service { get; private set; }
+        protected IMdmEntityServiceFactory Factory { get; private set; }
 
         /// <copydocfrom cref="IMdmEntityLocator{T}.Get" />
-        public TContract Get(MdmId id)
+        public TContract Get(MdmId id, uint version = 0)
         {
-            return WebResponseUtility.Retry(() => this.Service.Get(id));
+            return WebResponseUtility.Retry(() => this.Factory.EntityService<TContract>(version).Get(id));
         }
     }
 }

@@ -12,7 +12,8 @@
         /// Get a MDM entity.
         /// </summary>
         /// <param name="id">MdmId to use</param>
+        /// <param name="version">contract version default = 0</param>
         /// <returns>The MDM entity if found, null otherwise.</returns>
-        TContract Get(MdmId id);
+        TContract Get(MdmId id, uint version = 0);
     }
 }

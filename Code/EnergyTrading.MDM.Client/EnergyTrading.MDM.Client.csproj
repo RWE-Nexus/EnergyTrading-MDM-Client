@@ -106,7 +106,7 @@
     <Compile Include="Services\LocatorMdmModelEntityServiceFactory.cs" />
     <Compile Include="Services\MdmEntityLocatorFactory.cs" />
     <Compile Include="Services\MdmModelEntityService.cs" />
-    <Compile Include="Services\MdmServiceMdmEntityLocator.cs" />
+    <Compile Include="Services\MdmEntityServiceFactoryMdmEntityLocator.cs" />
     <Compile Include="Services\ReferenceDataService.cs" />
     <Compile Include="Services\MdmServiceExtensions.cs" />
     <Compile Include="WebClient\MdmFaultException.cs" />

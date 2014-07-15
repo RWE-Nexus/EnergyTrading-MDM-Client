@@ -14,7 +14,7 @@
         /// <typeparam name="TContract">Type of the MDM contract</typeparam>
         /// <typeparam name="TModel">Type of the MDM model.</typeparam>
         /// <returns>A <see cref="IMdmModelEntityService{T, U}" /> class.</returns>
-        IMdmModelEntityService<TContract, TModel> ModelService<TContract, TModel>()
+        IMdmModelEntityService<TContract, TModel> ModelService<TContract, TModel>(uint version = 0)
             where TContract : class, IMdmEntity
             where TModel : IMdmModelEntity<TContract>;
     }

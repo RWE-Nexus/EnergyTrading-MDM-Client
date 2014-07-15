@@ -66,7 +66,7 @@ namespace EnergyTrading.Mdm.Client.WebApi.Registrars
             container.RegisterType<IMdmEntityLocatorService, MdmEntityLocatorFactory>();
 
             // Standard locator, no chain
-            container.RegisterType(typeof(IMdmEntityLocator<>), typeof(MdmServiceMdmEntityLocator<>));
+            container.RegisterType(typeof(IMdmEntityLocator<>), typeof(MdmEntityServiceFactoryMdmEntityLocator<>));
 
             container.RegisterType<IMdmModelEntityService, MdmModelEntityService>();
             container.RegisterType<IMdmModelEntityServiceFactory, LocatorMdmModelEntityServiceFactory>();
