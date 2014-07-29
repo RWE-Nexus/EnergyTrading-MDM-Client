@@ -16,6 +16,9 @@
             <dependency id="EnergyTrading.Core" version="" />
             <dependency id="EnergyTrading.Unity" version="" />
             <dependency id="Unity" version="" />
+            <dependency id="Microsoft.AspNet.WebApi.Client" version="[4.0, 5.0)" />
+            <dependency id="Microsoft.Net.Http" version="[2.0, 3.0)" />
+            <dependency id="Newtonsoft.Json" />
         </dependencies>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
     </metadata>
