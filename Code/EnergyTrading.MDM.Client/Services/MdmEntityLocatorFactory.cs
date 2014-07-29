@@ -13,10 +13,10 @@
             this.locator = locator;
         }
 
-        public TContract Get<TContract>(MdmId id) 
+        public TContract Get<TContract>(MdmId id, uint version = 0) 
             where TContract : IMdmEntity
         {
-            return this.EntityService<TContract>().Get(id);
+            return this.EntityService<TContract>().Get(id, version);
         }
 
         private IMdmEntityLocator<TContract> EntityService<TContract>() 

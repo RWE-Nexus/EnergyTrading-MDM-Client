@@ -1,4 +1,6 @@
-﻿namespace EnergyTrading.Mdm.Client.Tests.Services
+﻿using EnergyTrading.Caching.InMemory;
+
+namespace EnergyTrading.Mdm.Client.Tests.Services
 {
     using System.Collections.Generic;
     using System.Runtime.Caching;
@@ -29,10 +31,10 @@
             this.mdmService = new Mock<IMdmEntityService<SourceSystem>>();
             this.policyFactory = new Mock<ICacheItemPolicyFactory>();
             this.policy = new CacheItemPolicy();
-
+            var inmemoryCacheRepo = new InMemoryCacheRepository();
             this.policyFactory.Setup(x => x.CreatePolicy()).Returns(this.policy);
 
-            this.cacheService = new CachePolicyMdmEntityService<SourceSystem>(this.mdmService.Object, this.policyFactory.Object);           
+            this.cacheService = new CachePolicyMdmEntityService<SourceSystem>(this.mdmService.Object, this.policyFactory.Object,inmemoryCacheRepo);           
         }
 
         [Test]

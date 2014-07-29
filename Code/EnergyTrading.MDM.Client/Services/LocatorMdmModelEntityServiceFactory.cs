@@ -13,7 +13,7 @@
     public class LocatorMdmModelEntityServiceFactory : IMdmModelEntityServiceFactory
     {
         private readonly IServiceLocator locator;
-        private readonly ConcurrentDictionary<Tuple<Type, Type>, object> cache;
+        private readonly ConcurrentDictionary<Tuple<Type, Type, string>, object> cache;
 
         /// <summary>
         /// Creates a new instance of the <see cref="LocatorMdmModelEntityServiceFactory" />
@@ -22,19 +22,20 @@
         public LocatorMdmModelEntityServiceFactory(IServiceLocator locator)
         {
             this.locator = locator;
-            this.cache = new ConcurrentDictionary<Tuple<Type, Type>, object>();
+            this.cache = new ConcurrentDictionary<Tuple<Type, Type, string>, object>();
         }
 
         /// <copydocfrom cref="IMdmModelEntityServiceFactory.ModelService{T, U}" />
-        public IMdmModelEntityService<TContract, TModel> ModelService<TContract, TModel>()
+        public IMdmModelEntityService<TContract, TModel> ModelService<TContract, TModel>(uint version = 0)
             where TContract : class, IMdmEntity
             where TModel : IMdmModelEntity<TContract>
         {
-            var type = new Tuple<Type, Type>(typeof(TContract), typeof(TModel));
+            var type = new Tuple<Type, Type, string>(typeof(TContract), typeof(TModel), version == 0 ? string.Empty : "V" + version);
             object value;
             if (!this.cache.TryGetValue(type, out value))
             {
-                value = this.locator.GetInstance<IMdmModelEntityService<TContract, TModel>>();
+                value = version == 0 ? this.locator.GetInstance<IMdmModelEntityService<TContract, TModel>>()
+                    : this.locator.GetInstance<IMdmModelEntityService<TContract, TModel>>("V" + version);
                 this.cache.AddOrUpdate(type, value, (x, y) => value);
             }
 

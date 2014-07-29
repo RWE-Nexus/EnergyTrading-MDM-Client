@@ -1,4 +1,6 @@
-﻿namespace EnergyTrading.Mdm.Client.Tests.Services
+﻿using EnergyTrading.Caching.InMemory;
+
+namespace EnergyTrading.Mdm.Client.Tests.Services
 {
     using System;
     using System.Collections.Specialized;
@@ -27,10 +29,11 @@
             // Given
             var mockMdmEntityService = new Mock<IMdmEntityService<SourceSystem>>();
             var mockConfigManager = new Mock<IConfigurationManager>();
+            var inmemoryCacheRepo = new InMemoryCacheRepository();
 
             mockConfigManager.Setup(x => x.AppSettings).Returns(new NameValueCollection { { "CacheItemPolicy.Expiration." + CacheKey, "3500" } });
             var cachePolicyFactory = new AbsoluteCacheItemPolicyFactory(CacheKey, mockConfigManager.Object);
-            var locationEntityService = new CachePolicyMdmEntityService<SourceSystem>(mockMdmEntityService.Object, cachePolicyFactory);
+            var locationEntityService = new CachePolicyMdmEntityService<SourceSystem>(mockMdmEntityService.Object, cachePolicyFactory, inmemoryCacheRepo);
             var location = new SourceSystem
             {
                 Identifiers = new MdmIdList { new MdmId { SystemName = "Nexus", Identifier = "1", IsMdmId = true } },
@@ -65,10 +68,10 @@
             // Given
             var mockMdmEntityService = new Mock<IMdmEntityService<SourceSystem>>();
             var mockConfigManager = new Mock<IConfigurationManager>();
-
+            var inmemoryCacheRepo = new InMemoryCacheRepository();
             mockConfigManager.Setup(x => x.AppSettings).Returns(new NameValueCollection { { "CacheItemPolicy.Expiration." + CacheKey, "3500" } });
             var cachePolicyFactory = new AbsoluteCacheItemPolicyFactory(CacheKey, mockConfigManager.Object);
-            var locationEntityService = new CachePolicyMdmEntityService<SourceSystem>(mockMdmEntityService.Object, cachePolicyFactory);
+            var locationEntityService = new CachePolicyMdmEntityService<SourceSystem>(mockMdmEntityService.Object, cachePolicyFactory,inmemoryCacheRepo);
             var nexusId = new MdmId { SystemName = "Nexus", Identifier = "1", IsMdmId = true };
             var location = new SourceSystem
             {
@@ -104,10 +107,11 @@
             // Given
             var mockMdmEntityService = new Mock<IMdmEntityService<SourceSystem>>();
             var mockConfigManager = new Mock<IConfigurationManager>();
+            var inmemoryCacheRepo = new InMemoryCacheRepository();
             mockConfigManager.Setup(x => x.AppSettings).Returns(new NameValueCollection { { "CacheItemPolicy.Expiration." + CacheKey, "3500" } });
 
             var cachePolicyFactory = new AbsoluteCacheItemPolicyFactory(CacheKey, mockConfigManager.Object);
-            var locationEntityService = new CachePolicyMdmEntityService<SourceSystem>(mockMdmEntityService.Object, cachePolicyFactory);
+            var locationEntityService = new CachePolicyMdmEntityService<SourceSystem>(mockMdmEntityService.Object, cachePolicyFactory,inmemoryCacheRepo);
             var nexusId = new MdmId { SystemName = "Nexus", Identifier = "1", IsMdmId = true };
             var adcId = new MdmId { SystemName = "ADC", Identifier = "123", IsMdmId = false };
             var location = new SourceSystem

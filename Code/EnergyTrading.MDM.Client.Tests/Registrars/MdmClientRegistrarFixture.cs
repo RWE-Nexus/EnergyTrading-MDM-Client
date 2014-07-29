@@ -1,4 +1,7 @@
-﻿namespace EnergyTrading.Mdm.Client.Tests.Registrars
+﻿using EnergyTrading.Caching;
+using EnergyTrading.Caching.InMemory;
+
+namespace EnergyTrading.Mdm.Client.Tests.Registrars
 {
     using EnergyTrading.Mdm.Client.Services;
     using EnergyTrading.Mdm.Client.WebApi.Registrars;
@@ -42,6 +45,13 @@
         public void CanResolveMdmModelEntityService()
         {
             this.container.Resolve<IMdmModelEntityService>();
+        }
+
+        [Test]
+        public void ByDefaultCacheShouldUseInMemoryCacheFactory()
+        {
+            var cacheFactory = container.Resolve<ICacheRepository>();
+            Assert.IsAssignableFrom<InMemoryCacheRepository>(cacheFactory);
         }
     }
 }

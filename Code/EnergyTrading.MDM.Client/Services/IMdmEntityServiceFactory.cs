@@ -12,7 +12,7 @@
         /// </summary>
         /// <typeparam name="TContract">Type of MDM contract to use</typeparam>
         /// <returns>A <see cref="IMdmEntityService{T}" /> class.</returns>
-        IMdmEntityService<TContract> EntityService<TContract>()
+        IMdmEntityService<TContract> EntityService<TContract>(uint version = 0)
             where TContract : IMdmEntity;
     }
 }

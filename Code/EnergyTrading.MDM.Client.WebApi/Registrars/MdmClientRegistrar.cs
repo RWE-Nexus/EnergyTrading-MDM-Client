@@ -1,4 +1,6 @@
-﻿namespace EnergyTrading.Mdm.Client.WebApi.Registrars
+﻿using EnergyTrading.Caching.InMemory.Registrars;
+
+namespace EnergyTrading.Mdm.Client.WebApi.Registrars
 {
     using System.Configuration;
     using System.Linq;
@@ -44,6 +46,10 @@
             // Http clients
             container.RegisterType<IHttpClientFactory, HttpClientFactory>();
 
+
+            //Register Cache service
+            InMemoryCacheRegistrar.Register(container);
+
             // Requester
             container.RegisterType<IMessageRequester, MessageRequester>();
 
@@ -60,7 +66,7 @@
             container.RegisterType<IMdmEntityLocatorService, MdmEntityLocatorFactory>();
 
             // Standard locator, no chain
-            container.RegisterType(typeof(IMdmEntityLocator<>), typeof(MdmServiceMdmEntityLocator<>));
+            container.RegisterType(typeof(IMdmEntityLocator<>), typeof(MdmEntityServiceFactoryMdmEntityLocator<>));
 
             container.RegisterType<IMdmModelEntityService, MdmModelEntityService>();
             container.RegisterType<IMdmModelEntityServiceFactory, LocatorMdmModelEntityServiceFactory>();
@@ -75,32 +81,43 @@
         {
         }
 
-        protected virtual void RegisterMdmService<T>(IUnityContainer container, string url)
+        protected virtual void RegisterMdmService<T>(IUnityContainer container, string url, uint version = 0)
             where T : class, IMdmEntity
         {
             if (this.MdmCaching)
             {
-                var cachekey = "Mdm." + typeof(T).Name;
+                var cachekey = "Mdm." + typeof(T).Name + (version > 0 ? "V" + version : string.Empty);
 
                 container.RegisterAbsoluteCacheItemPolicyFactory(cachekey);
 
+                // url is different for different versions so can still use it here
                 container.RegisterType<IMdmEntityService<T>, MdmEntityService<T>>(
                     url,
                     new InjectionConstructor(
                         this.BaseUri + "/" + url,
                         new ResolvedParameter<IMessageRequester>()));
 
-                // Singleton as we have a cache
-                container.RegisterType<IMdmEntityService<T>, CachePolicyMdmEntityService<T>>(
-                    new ContainerControlledLifetimeManager(),
-                    new InjectionConstructor(
-                        new ResolvedParameter<IMdmEntityService<T>>(url),
-                        new ResolvedParameter<ICacheItemPolicyFactory>(cachekey)));
+                // Singleton as we have a cache but named according to version if necessary
+                if (version == 0)
+                {
+                    container.RegisterType<IMdmEntityService<T>, CachePolicyMdmEntityService<T>>(new ContainerControlledLifetimeManager(), new InjectionConstructor(new ResolvedParameter<IMdmEntityService<T>>(url), new ResolvedParameter<ICacheItemPolicyFactory>(cachekey), new ResolvedParameter<ICacheRepository>(), version));
+                }
+                else
+                {
+                    container.RegisterType<IMdmEntityService<T>, CachePolicyMdmEntityService<T>>("V" + version, new ContainerControlledLifetimeManager(), new InjectionConstructor(new ResolvedParameter<IMdmEntityService<T>>(url), new ResolvedParameter<ICacheItemPolicyFactory>(cachekey), new ResolvedParameter<ICacheRepository>(), version));
+                }
             }
             else
             {
-                container.RegisterType<IMdmEntityService<T>, MdmEntityService<T>>(
-                    new InjectionConstructor(this.BaseUri + "/" + url, new ResolvedParameter<IMessageRequester>()));
+                if (version == 0)
+                {
+                    container.RegisterType<IMdmEntityService<T>, MdmEntityService<T>>(new InjectionConstructor(this.BaseUri + "/" + url, new ResolvedParameter<IMessageRequester>()));
+                }
+                else
+                {
+                    container.RegisterType<IMdmEntityService<T>, MdmEntityService<T>>("V" + version, new InjectionConstructor(this.BaseUri + "/" + url, new ResolvedParameter<IMessageRequester>()));
+                }
+
             }
         }
 
