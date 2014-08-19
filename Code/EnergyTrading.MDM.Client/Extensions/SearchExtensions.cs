@@ -179,11 +179,12 @@
         /// <typeparam name="T">Type contained in the response.</typeparam>
         /// <param name="service">MDM service to use</param>
         /// <param name="search">Search to execute</param>
+        /// <param name="version">optional version of contract to use in Search (default = 0)</param>
         /// <returns>true if the search worked, false otherwise.</returns>
-        public static Tuple<bool, IList<T>> TrySearch<T>(this IMdmModelEntityService service, Search search)
+        public static Tuple<bool, IList<T>> TrySearch<T>(this IMdmModelEntityService service, Search search, uint version = 0)
             where T : IMdmEntity
         {
-            var response = service.Search<T>(search);
+            var response = service.Search<T>(search, version);
             return response.Fault.IsServiceUnavailable() 
                 ? Tuple.Create(false, (IList<T>) new List<T>()) 
                 : Tuple.Create(true, response.HandleResponse());
