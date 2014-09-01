@@ -24,6 +24,7 @@
 
         private readonly IMdmEntityService<TContract> service;
         private readonly ICacheService cache;
+        private readonly ICacheService searchCache;
         private readonly ICacheItemPolicyFactory cacheItemPolicyFactory;
         private readonly Dictionary<MdmId, int> mappings;
         private readonly Dictionary<int, string> etags;
@@ -42,6 +43,7 @@
             this.cacheName = "Mdm." + typeof(TContract).Name + (version > 0 ? "V" + version : string.Empty);
             this.cacheRepository = cacheRepository;
             this.cache = cacheRepository.GetNamedCache(cacheName);
+            this.searchCache = cacheRepository.GetNamedCache("MDMSearchResultsCache");
             this.cacheItemPolicyFactory = cacheItemPolicyFactory;
             this.mappings = new Dictionary<MdmId, int>();
             this.etags = new Dictionary<int, string>();
@@ -317,7 +319,7 @@
                     else
                     {
                         Logger.DebugFormat("Adding the searched :", result.Code);
-                        this.cache.Add(key, result, this.cacheItemPolicyFactory.CreatePolicy());
+                        this.searchCache.Add(key, result, this.cacheItemPolicyFactory.CreatePolicy());
                     }
                 }
             }
@@ -419,7 +421,7 @@
 
         private PagedWebResponse<IList<TContract>> CheckSearchCache(string key)
         {
-            return this.cache.Get<PagedWebResponse<IList<TContract>>>(key);
+            return this.searchCache.Get<PagedWebResponse<IList<TContract>>>(key);
         }
 
         private string ToSearchKey(Search search)
