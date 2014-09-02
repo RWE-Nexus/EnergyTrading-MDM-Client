@@ -12,6 +12,7 @@
     using EnergyTrading.Logging;
     using EnergyTrading.Mdm.Client.WebClient;
     using EnergyTrading.Mdm.Contracts;
+    using EnergyTrading.Search;
     using EnergyTrading.Xml.Serialization;
 
     /// <summary>
@@ -31,6 +32,7 @@
         private readonly string entityName;
         private readonly object syncLock;
         private readonly ICacheRepository cacheRepository;
+        private readonly uint contractVersion;
 
         /// <summary>
         /// Create a new instance of the <see cref="CachePolicyMdmEntityService{T}" /> class.
@@ -49,6 +51,7 @@
             this.etags = new Dictionary<int, string>();
             this.syncLock = new object();
             this.entityName = typeof(TContract).Name;
+            this.contractVersion = version;
         }
 
         private string cacheName { get; set; }
@@ -426,7 +429,7 @@
 
         private string ToSearchKey(Search search)
         {
-            return search.DataContractSerialize();
+            return "client" + search.ToKey<TContract>(contractVersion);
         }
 
         private void ProcessContract(WebResponse<TContract> reponse)
