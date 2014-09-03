@@ -16,6 +16,7 @@
     using EnergyTrading.Logging;
     using EnergyTrading.Mdm.Client.WebClient;
     using EnergyTrading.Mdm.Contracts;
+    using EnergyTrading;
 
     using Microsoft.Practices.Unity;
 
@@ -49,6 +50,7 @@
 
             this.ResponseHandler(webResponse, uri, client =>
             {
+                client.AddHeader(CoreConstants.UserNameHeader, GetUserName());
                 var content = new ObjectContent<TMessage>(message, new XmlMediaTypeFormatter());
                 using (var response = client.Post(uri, content))
                 {
@@ -73,6 +75,7 @@
 
             this.ResponseHandler(webResponse, uri, client =>
             {
+                client.AddHeader(CoreConstants.UserNameHeader, GetUserName());
                 using (var response = client.Delete(uri))
                 {
                     this.PopulateWebResponse(webResponse, response, HttpStatusCode.OK);
@@ -91,6 +94,7 @@
 
             this.ResponseHandler(webResponse, uri, client =>
             {
+                client.AddHeader(CoreConstants.UserNameHeader, GetUserName());
                 using (var response = client.Get(uri))
                 {
                     this.PopulateWebResponse(webResponse, response, HttpStatusCode.OK);
@@ -123,6 +127,7 @@
                 uri,
                 client =>
                     {
+                        client.AddHeader(CoreConstants.UserNameHeader, GetUserName());
                         var content = new ObjectContent<Search>(message, new XmlMediaTypeFormatter());
                         using (var response = client.Post(uri, content))
                         {
@@ -195,6 +200,7 @@
             this.ResponseHandler(webResponse, uri, client =>
             {
                 client.AddHeader("If-Match", etag);
+                client.AddHeader(CoreConstants.UserNameHeader, GetUserName());
 
                 var content = new ObjectContent<TMessage>(message, new XmlMediaTypeFormatter());
                 using (var response = client.Post(uri, content))
@@ -259,6 +265,11 @@
             }
 
             return fault;
+        }
+
+        private string GetUserName()
+        {
+            return ContextInfoProvider.GetUserName();
         }
     }
 }

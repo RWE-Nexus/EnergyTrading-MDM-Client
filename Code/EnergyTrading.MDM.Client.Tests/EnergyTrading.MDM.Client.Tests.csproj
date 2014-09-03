@@ -35,17 +35,17 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="EnergyTrading.Caching.InMemory, Version=77.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="EnergyTrading.Caching.InMemory, Version=92.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\EnergyTrading.Caching.InMemory.2.8.1.77\lib\net40\EnergyTrading.Caching.InMemory.dll</HintPath>
+      <HintPath>..\packages\EnergyTrading.Caching.InMemory.2.8.1.92\lib\net40\EnergyTrading.Caching.InMemory.dll</HintPath>
     </Reference>
     <Reference Include="EnergyTrading.Contracts, Version=77.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\EnergyTrading.Contracts.2.8.1.77\lib\net35\EnergyTrading.Contracts.dll</HintPath>
     </Reference>
-    <Reference Include="EnergyTrading.Core, Version=91.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="EnergyTrading.Core, Version=92.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\EnergyTrading.Core.2.8.1.91\lib\net40\EnergyTrading.Core.dll</HintPath>
+      <HintPath>..\packages\EnergyTrading.Core.2.8.1.92\lib\net40\EnergyTrading.Core.dll</HintPath>
     </Reference>
     <Reference Include="EnergyTrading.MDM.Contracts, Version=10.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
