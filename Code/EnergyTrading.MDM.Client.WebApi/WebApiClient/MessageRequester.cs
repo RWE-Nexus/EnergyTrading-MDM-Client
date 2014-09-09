@@ -230,6 +230,7 @@
             }
             catch (Exception ex)
             {
+                Logger.Error(ex.AllExceptionMessages());
                 response.Code = HttpStatusCode.InternalServerError;
                 response.IsValid = false;
                 response.Fault = new Fault { Message = ex.AllExceptionMessages() };
