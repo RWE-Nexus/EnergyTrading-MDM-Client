@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
     using System.Net;
     using System.Web;
@@ -114,6 +115,8 @@
                 };
             }
 
+            LogResponse(mappingId, response, null, "DeleteMapping");
+
             return new WebResponse<TContract>
             {
                 Code = response.Code,
@@ -184,10 +187,23 @@
             {
                 Logger.DebugFormat("Create<{0}>", typeof(TContract).Name);
             }
+
             var response = this.Create(this.BaseUri, contract);
+
             if (response.IsValid)
             {
                 this.ProcessContract(response);
+            }
+            else
+            {
+                if (contract.Identifiers != null && contract.Identifiers.Any())
+                {
+                    LogResponse(response, "Create<{0}> - {1}", typeof(TContract).Name, contract.Identifiers.First().Identifier);
+                }
+                else
+                {
+                    LogResponse(response, "Create<{0}>", typeof(TContract).Name);
+                }
             }
 
             return response;
@@ -211,6 +227,8 @@
                 // TODO: Add fault for "No mapping to system x"
                 response.Code = HttpStatusCode.NotFound;
             }
+
+            LogResponse(id, response, null, "GetMapping");
 
             return new WebResponse<MdmId>
             {
@@ -238,7 +256,18 @@
                 throw new ArgumentNullException("identifier");
             }
 
-            return this.CrossMap(identifier.SystemName, identifier.Identifier, targetSystem);
+            var response = this.CrossMap(identifier.SystemName, identifier.Identifier, targetSystem);
+
+            if (!response.IsValid)
+            {
+                LogResponse(response,
+                    response.Code == HttpStatusCode.NotFound
+                        ? "CrossMap<{0}> - Could not find mapping for {1} - {2}"
+                        : "CrossMap<{0}> - {1} - {2}", typeof (TContract).Name,
+                    identifier.SystemName, identifier.Identifier);
+            }
+
+            return response;
         }
 
         public WebResponse<MappingResponse> CrossMap(string sourceSystem, string identifier, string targetSystem)
@@ -247,7 +276,19 @@
             {
                 Logger.DebugFormat("CrossMap<{0}>: {1} {2} {3}", typeof(TContract).Name, sourceSystem, identifier, targetSystem);
             }
-            return this.requester.Request<MappingResponse>(string.Format(this.crossMapUri, sourceSystem, identifier, targetSystem));
+
+            var response = this.requester.Request<MappingResponse>(string.Format(this.crossMapUri, sourceSystem, identifier, targetSystem));
+
+            if (!response.IsValid)
+            {
+                LogResponse(response,
+                    response.Code == HttpStatusCode.NotFound
+                        ? "CrossMap<{0}> - Could not find mapping for {1} - {2}"
+                        : "CrossMap<{0}> - {1} - {2}", typeof (TContract).Name,
+                    sourceSystem, identifier);
+            }
+
+            return response;
         }
 
         public WebResponse<MdmId> Map(int id, string targetSystem)
@@ -276,8 +317,10 @@
                 Logger.DebugFormat("Update<{0}>: {1} {2}", typeof(TContract).Name, id, etag);
             }
             var response = this.requester.Update(string.Format(this.entityUri, id), etag, contract);
+
             if (!response.IsValid)
             {
+                LogResponse(id, response, null, "Update");
                 return response;
             }
 
@@ -306,6 +349,9 @@
             }
 
             var response = this.GetContract(uri);
+
+            LogResponse(id, response, validAt, null);
+
             return response;
         }
 
@@ -318,6 +364,9 @@
             }
 
             var response = this.GetContract(uri);
+
+            LogResponse(sourceIdentifier.Identifier, response, validAt, null);
+
             return response;
         }
 
@@ -329,8 +378,8 @@
         private WebResponse<TResponse> Create<TMessage, TResponse>(string uri, TMessage message) where TResponse : class
         {
             var request = this.requester.Create(uri, message);
-            return request.IsValid ? 
-                   this.requester.Request<TResponse>(request.Location) : 
+            return request.IsValid ?
+                   this.requester.Request<TResponse>(request.Location) :
                    new WebResponse<TResponse> { Code = request.Code, IsValid = false, Fault = request.Fault };
         }
 
@@ -354,7 +403,7 @@
             this.etags[id] = reponse.Tag;
         }
 
-        private WebResponse<TMessage> Request<TMessage>(string uri) 
+        private WebResponse<TMessage> Request<TMessage>(string uri)
             where TMessage : class
         {
             return this.requester.Request<TMessage>(uri);
@@ -363,6 +412,35 @@
         private static string UrlEncode(string value)
         {
             return HttpUtility.UrlEncode(value);
+        }
+
+        private static void LogResponse<T>(WebResponse<T> response, string format, params object[] parameters)
+        {
+            const string MessageFormat = "{0} {1}";
+
+            if (response.IsValid)
+            {
+                return;
+            }
+
+            if (response.Fault == null)
+            {
+                Logger.InfoFormat(MessageFormat, string.Format(format, parameters), response.Code);
+            }
+            else
+            {
+                Logger.InfoFormat(MessageFormat, string.Format(format, parameters), response.Fault.Message);
+            }
+        }
+
+        private static void LogResponse(string id, WebResponse<TContract> response, DateTime? validAt, string verb = "GET")
+        {
+            LogResponse(response, "{0}<{1}> - Id {2} {3}", verb, typeof(TContract).Name, id, validAt);
+        }
+
+        private static void LogResponse(int id, WebResponse<TContract> response, DateTime? validAt, string verb = "GET")
+        {
+            LogResponse(id.ToString(CultureInfo.InvariantCulture), response, validAt, verb);
         }
     }
 }
