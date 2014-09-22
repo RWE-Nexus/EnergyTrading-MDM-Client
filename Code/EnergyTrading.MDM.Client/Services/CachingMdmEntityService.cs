@@ -134,47 +134,17 @@
 
         public WebResponse<TContract> Create(TContract contract)
         {
-            try
-            {
-                Logger.Debug("Start");
-                var response = this.service.Create(contract);
-                if (response.IsValid)
-                {
-                    this.ProcessContract(response);
-                }
-
-                return response;
-            }
-            finally
-            {
-                Logger.Debug("Stop");
-            }
+            return Create(contract, null);
         }
 
         public WebResponse<MdmId> CreateMapping(int id, MdmId identifier)
         {
-            try
-            {
-                Logger.Debug("Start");
-                return this.service.CreateMapping(id, identifier);
-            }
-            finally
-            {
-                Logger.Debug("Stop");
-            }
+            return CreateMapping(id, identifier, null);
         }
 
         public WebResponse<TContract> DeleteMapping(int entityId, int mappingId)
         {
-            try
-            {
-                Logger.DebugFormat("Start: '{0}' '{1}'", entityId, mappingId);
-                return this.service.DeleteMapping(entityId, mappingId);
-            }
-            finally
-            {
-                Logger.DebugFormat("Stop: '{0}' '{1}'", entityId, mappingId);
-            }
+            return DeleteMapping(entityId, mappingId, null);
         }
 
         public WebResponse<MdmId> GetMapping(int id, Predicate<MdmId> query)
@@ -278,7 +248,62 @@
 
         public WebResponse<TContract> Update(int id, TContract contract, string etag)
         {
-            var response = this.service.Update(id, contract, etag);
+            return Update(id, contract, etag, null);
+        }
+
+        public WebResponse<TContract> Create(TContract contract, MdmRequestInfo requestInfo)
+        {
+            try
+            {
+                Logger.Debug("Start");
+                var response = this.service.Create(contract, requestInfo);
+                if (response.IsValid)
+                {
+                    this.ProcessContract(response);
+                }
+
+                return response;
+            }
+            finally
+            {
+                Logger.Debug("Stop");
+            }
+        }
+
+        public WebResponse<MdmId> CreateMapping(int id, MdmId identifier, MdmRequestInfo requestInfo)
+        {
+            try
+            {
+                Logger.Debug("Start");
+                return this.service.CreateMapping(id, identifier);
+            }
+            finally
+            {
+                Logger.Debug("Stop");
+            }
+        }
+
+        public WebResponse<TContract> DeleteMapping(int entityId, int mappingId, MdmRequestInfo requestInfo)
+        {
+            try
+            {
+                Logger.DebugFormat("Start: '{0}' '{1}'", entityId, mappingId);
+                return this.service.DeleteMapping(entityId, mappingId);
+            }
+            finally
+            {
+                Logger.DebugFormat("Stop: '{0}' '{1}'", entityId, mappingId);
+            }
+        }
+
+        public WebResponse<TContract> Update(int id, TContract contract, MdmRequestInfo requestInfo)
+        {
+            return Update(id, contract, this.etags[id], requestInfo);
+        }
+
+        public WebResponse<TContract> Update(int id, TContract contract, string etag, MdmRequestInfo requestInfo)
+        {
+            var response = this.service.Update(id, contract, etag, requestInfo);
             if (response.IsValid)
             {
                 this.ProcessContract(response);

@@ -248,5 +248,47 @@
         /// </returns>
         WebResponse<TContract> Update<TContract>(int id, TContract entity, string etag, uint version = 0)
             where TContract : IMdmEntity;
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="contract"></param>
+        /// <param name="requestInfo"></param>
+        /// <returns></returns>
+        WebResponse<TContract> Create<TContract>(TContract contract, MdmRequestInfo requestInfo, uint version = 0)
+            where TContract : IMdmEntity;
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="identifier"></param>
+        /// <param name="requestInfo"></param>
+        /// <returns></returns>
+        WebResponse<MdmId> CreateMapping<TContract>(int id, MdmId identifier, MdmRequestInfo requestInfo, uint version = 0)
+             where TContract : IMdmEntity;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="entityId"></param>
+        /// <param name="mappingId"></param>
+        /// <param name="requestInfo"></param>
+        /// <returns></returns>
+        WebResponse<TContract> DeleteMapping<TContract>(int entityId, int mappingId, MdmRequestInfo requestInfo, uint version = 0)
+             where TContract : IMdmEntity;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="contract"></param>
+        /// <param name="etag"></param>
+        /// <param name="requestInfo"></param>
+        /// <returns></returns>
+        WebResponse<TContract> Update<TContract>(int id, TContract contract, string etag, MdmRequestInfo requestInfo, uint version = 0)
+             where TContract : IMdmEntity;
     }
 }

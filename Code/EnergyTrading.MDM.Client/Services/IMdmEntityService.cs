@@ -136,5 +136,54 @@
         /// <param name="etag"></param>
         /// <returns></returns>
         WebResponse<TContract> Update(int id, TContract contract, string etag);
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="contract"></param>
+        /// <param name="requestInfo"></param>
+        /// <returns></returns>
+        WebResponse<TContract> Create(TContract contract,MdmRequestInfo requestInfo);
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="identifier"></param>
+        /// <param name="requestInfo"></param>
+        /// <returns></returns>
+        WebResponse<MdmId> CreateMapping(int id, MdmId identifier,MdmRequestInfo requestInfo);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="entityId"></param>
+        /// <param name="mappingId"></param>
+        /// <param name="requestInfo"></param>
+        /// <returns></returns>
+        WebResponse<TContract> DeleteMapping(int entityId, int mappingId, MdmRequestInfo requestInfo);
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="contract"></param>
+        /// <param name="requestInfo"></param>
+        /// <returns></returns>
+        WebResponse<TContract> Update(int id, TContract contract, MdmRequestInfo requestInfo);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="contract"></param>
+        /// <param name="etag"></param>
+        /// <param name="requestInfo"></param>
+        /// <returns></returns>
+        WebResponse<TContract> Update(int id, TContract contract,string etag, MdmRequestInfo requestInfo);
+
     }
 }

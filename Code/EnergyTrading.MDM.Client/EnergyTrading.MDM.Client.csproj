@@ -88,6 +88,8 @@
     <Compile Include="..\SolutionInfo.cs">
       <Link>Properties\SolutionInfo.cs</Link>
     </Compile>
+    <Compile Include="Constants\MdmConstants.cs" />
+    <Compile Include="Extensions\MdmRequestInfoExtensions.cs" />
     <Compile Include="Extensions\SearchExtensions.cs" />
     <Compile Include="Extensions\WebResponseUtility.cs" />
     <Compile Include="Model\IMdmModelEntity.cs" />
@@ -114,6 +116,7 @@
     <Compile Include="Services\LocatorMdmEntityServiceFactory.cs" />
     <Compile Include="Services\MdmEntityService.cs" />
     <Compile Include="Services\MdmService.cs" />
+    <Compile Include="WebClient\MdmRequestInfo.cs" />
     <Compile Include="WebClient\PagedWebResponse.cs" />
     <Compile Include="WebClient\WebResponse.cs" />
   </ItemGroup>

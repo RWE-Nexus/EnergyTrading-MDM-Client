@@ -1,7 +1,17 @@
 ﻿namespace EnergyTrading.Mdm.Client.WebApi.WebApiClient
 {
+    using EnergyTrading;
+    using EnergyTrading.Contracts.Search;
+    using EnergyTrading.Extensions;
+    using EnergyTrading.Logging;
+    using EnergyTrading.Mdm.Client.Constants;
+    using EnergyTrading.Mdm.Client.Extensions;
+    using EnergyTrading.Mdm.Client.WebClient;
+    using EnergyTrading.Mdm.Contracts;
+    using Microsoft.Practices.Unity;
     using System;
     using System.Collections.Generic;
+    using System.Configuration;
     using System.IO;
     using System.Linq;
     using System.Net;
@@ -10,15 +20,6 @@
     using System.Reflection;
     using System.ServiceModel.Syndication;
     using System.Xml;
-
-    using EnergyTrading.Contracts.Search;
-    using EnergyTrading.Extensions;
-    using EnergyTrading.Logging;
-    using EnergyTrading.Mdm.Client.WebClient;
-    using EnergyTrading.Mdm.Contracts;
-    using EnergyTrading;
-
-    using Microsoft.Practices.Unity;
 
     /// <summary>
     /// Implements a IMessageRequester using IHttpClientFactory.
@@ -32,7 +33,8 @@
 
         // Used whilst we agree on this approach and then we can get rid of this constructor and each client can choose there own fault handling
         [InjectionConstructor]
-        public MessageRequester(IHttpClientFactory httpClientFactory) : this(httpClientFactory, new StandardFaultHandler())
+        public MessageRequester(IHttpClientFactory httpClientFactory)
+            : this(httpClientFactory, new StandardFaultHandler())
         {
         }
 
@@ -45,45 +47,13 @@
         /// <copydocfrom cref="IMessageRequester.Create{T}" />
         public WebResponse<TMessage> Create<TMessage>(string uri, TMessage message)
         {
-            Logger.DebugFormat("Start: {0}", uri);
-            var webResponse = new WebResponse<TMessage>();
-
-            this.ResponseHandler(webResponse, uri, client =>
-            {
-                client.AddHeader(CoreConstants.UserNameHeader, GetUserName());
-                var content = new ObjectContent<TMessage>(message, new XmlMediaTypeFormatter());
-                using (var response = client.Post(uri, content))
-                {
-                    this.PopulateWebResponse(webResponse, response, HttpStatusCode.Created);
-
-                    if (webResponse.IsValid)
-                    {
-                        webResponse.Location = this.Location(uri, response);
-                    }
-                }
-            });
-
-            Logger.DebugFormat("Finish: {0}", uri);
-            return webResponse;
+            return Create(uri, message, null);
         }
 
         /// <copydocfrom cref="IMessageRequester.Delete{T}" />
         public WebResponse<TMessage> Delete<TMessage>(string uri)
         {
-            Logger.DebugFormat("Start: {0}", uri);
-            var webResponse = new WebResponse<TMessage>();
-
-            this.ResponseHandler(webResponse, uri, client =>
-            {
-                client.AddHeader(CoreConstants.UserNameHeader, GetUserName());
-                using (var response = client.Delete(uri))
-                {
-                    this.PopulateWebResponse(webResponse, response, HttpStatusCode.OK);
-                }
-            });
-
-            Logger.DebugFormat("Finish: {0}", uri); 
-            return webResponse;
+            return Delete<TMessage>(uri, null);
         }
 
         /// <copydocfrom cref="IMessageRequester.Request{T}" />
@@ -126,65 +96,65 @@
                 result,
                 uri,
                 client =>
+                {
+                    client.AddHeader(CoreConstants.UserNameHeader, GetUserName());
+                    var content = new ObjectContent<Search>(message, new XmlMediaTypeFormatter());
+                    using (var response = client.Post(uri, content))
                     {
-                        client.AddHeader(CoreConstants.UserNameHeader, GetUserName());
-                        var content = new ObjectContent<Search>(message, new XmlMediaTypeFormatter());
-                        using (var response = client.Post(uri, content))
+                        if (response.StatusCode == HttpStatusCode.OK)
                         {
-                            if (response.StatusCode == HttpStatusCode.OK)
-                            {
-                                var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Ignore };
-                                Stream stream = null;
-                                var readTask = response.Content.ReadAsStreamAsync().ContinueWith(task =>
-                                    {
-                                        if (task.Exception != null)
-                                        {
-                                            result.Code = HttpStatusCode.InternalServerError;
-                                            result.IsValid = false;
-                                            result.Fault = new Fault { Message = "Exception reading response stream : " + task.Exception.Message };
-                                        }
-                                        else
-                                        {
-                                            stream = task.Result;
-                                        }
-                                        return task;
-                                    });
-                                readTask.Wait();
-                                if (stream != null)
+                            var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Ignore };
+                            Stream stream = null;
+                            var readTask = response.Content.ReadAsStreamAsync().ContinueWith(task =>
                                 {
-                                    var reader = XmlReader.Create(stream, settings);
-
-                                    var feed = SyndicationFeed.Load(reader);
-                                    if (feed == null)
+                                    if (task.Exception != null)
                                     {
                                         result.Code = HttpStatusCode.InternalServerError;
+                                        result.IsValid = false;
+                                        result.Fault = new Fault { Message = "Exception reading response stream : " + task.Exception.Message };
                                     }
                                     else
                                     {
-                                        result.Message = feed.Items.Select(syndicationItem => (XmlSyndicationContent)syndicationItem.Content).Select(syndic => syndic.ReadContent<TContract>()).ToList();
-                                        result.Code = HttpStatusCode.OK;
-
-                                        var nextPageLink = feed.Links.FirstOrDefault(syndicationLink => syndicationLink.RelationshipType == "next-results");
-                                        result.NextPage = nextPageLink == null ? null : nextPageLink.Uri;
+                                        stream = task.Result;
                                     }
-                                }
-                            }
-                            else
+                                    return task;
+                                });
+                            readTask.Wait();
+                            if (stream != null)
                             {
-                                result.Code = response.StatusCode;
+                                var reader = XmlReader.Create(stream, settings);
 
-                                if (response.StatusCode == HttpStatusCode.NotFound)
+                                var feed = SyndicationFeed.Load(reader);
+                                if (feed == null)
                                 {
-                                    result.IsValid = false;
-                                    result.Message = new List<TContract>();
-                                    return;
+                                    result.Code = HttpStatusCode.InternalServerError;
                                 }
+                                else
+                                {
+                                    result.Message = feed.Items.Select(syndicationItem => (XmlSyndicationContent)syndicationItem.Content).Select(syndic => syndic.ReadContent<TContract>()).ToList();
+                                    result.Code = HttpStatusCode.OK;
 
-                                result.IsValid = false;
-                                result.Fault = this.GetFault(response);
+                                    var nextPageLink = feed.Links.FirstOrDefault(syndicationLink => syndicationLink.RelationshipType == "next-results");
+                                    result.NextPage = nextPageLink == null ? null : nextPageLink.Uri;
+                                }
                             }
                         }
-                    });
+                        else
+                        {
+                            result.Code = response.StatusCode;
+
+                            if (response.StatusCode == HttpStatusCode.NotFound)
+                            {
+                                result.IsValid = false;
+                                result.Message = new List<TContract>();
+                                return;
+                            }
+
+                            result.IsValid = false;
+                            result.Fault = this.GetFault(response);
+                        }
+                    }
+                });
 
             Logger.DebugFormat("Finish: {0}", uri);
             return result;
@@ -193,29 +163,7 @@
         /// <copydocfrom cref="IMessageRequester.Update{T}" />
         public WebResponse<TMessage> Update<TMessage>(string uri, string etag, TMessage message)
         {
-            Logger.DebugFormat("Start: {0}", uri);
-
-            var webResponse = new WebResponse<TMessage>();
-
-            this.ResponseHandler(webResponse, uri, client =>
-            {
-                client.AddHeader("If-Match", etag);
-                client.AddHeader(CoreConstants.UserNameHeader, GetUserName());
-
-                var content = new ObjectContent<TMessage>(message, new XmlMediaTypeFormatter());
-                using (var response = client.Post(uri, content))
-                {
-                    this.PopulateWebResponse(webResponse, response, HttpStatusCode.NoContent);
-
-                    if (webResponse.IsValid)
-                    {
-                        webResponse.Location = this.Location(uri, response);
-                    }
-                }
-            });
-
-            Logger.DebugFormat("Finish: {0}", uri);
-            return webResponse;
+            return Update(uri, etag, message, null);
         }
 
         private void ResponseHandler<T>(WebResponse<T> response, string uri, Action<IHttpClient> action)
@@ -240,7 +188,7 @@
         private void PopulateWebResponse<T>(WebResponse<T> webResponse, HttpResponseMessage httpResponse, HttpStatusCode validCode)
         {
             webResponse.Code = httpResponse.StatusCode;
-            webResponse.IsValid = this.faultHandler.Handle(httpResponse, validCode);          
+            webResponse.IsValid = this.faultHandler.Handle(httpResponse, validCode);
             if (!webResponse.IsValid)
             {
                 webResponse.Fault = this.GetFault(httpResponse);
@@ -250,7 +198,7 @@
         private string Location(string uri, HttpResponseMessage httpResponse)
         {
             var srcUri = new Uri(uri);
-            return srcUri.GetLeftPart(UriPartial.Authority) + "/" + httpResponse.Headers.Location;  
+            return srcUri.GetLeftPart(UriPartial.Authority) + "/" + httpResponse.Headers.Location;
         }
 
         private Fault GetFault(HttpResponseMessage response)
@@ -271,6 +219,118 @@
         private string GetUserName()
         {
             return ContextInfoProvider.GetUserName();
+        }
+
+        private static MdmRequestInfo CheckAndPopulateRequestInfo(ref MdmRequestInfo requestInfo)
+        {
+            if (requestInfo == null)
+            {
+                requestInfo = new MdmRequestInfo();
+            }
+
+            if (string.IsNullOrWhiteSpace(requestInfo.RequestId))
+            {
+                requestInfo.RequestId = Guid.NewGuid().ToString();
+            }
+
+            if (string.IsNullOrWhiteSpace(requestInfo.SourceSystem))
+            {
+                requestInfo.SourceSystem = ConfigurationManager.AppSettings[MdmConstants.MdmRequestSourceSystemName];
+            }
+
+            return requestInfo;
+        }
+
+
+        public WebResponse<TMessage> Create<TMessage>(string uri, TMessage message, MdmRequestInfo requestInfo)
+        {
+            Logger.DebugFormat("Start: {0}", uri);
+
+            CheckAndPopulateRequestInfo(ref requestInfo);
+
+            var requestId = requestInfo.RequestId;
+
+            var webResponse = new WebResponse<TMessage>() { RequestId = requestId };
+
+            this.ResponseHandler(webResponse, uri, client =>
+            {
+                client.AddHeader(CoreConstants.UserNameHeader, GetUserName());
+
+                client.AddHeader(MdmConstants.MdmRequestHeaderName, requestInfo.Encode());
+
+                var content = new ObjectContent<TMessage>(message, new XmlMediaTypeFormatter());
+                using (var response = client.Post(uri, content))
+                {
+                    this.PopulateWebResponse(webResponse, response, HttpStatusCode.Created);
+
+                    if (webResponse.IsValid)
+                    {
+                        webResponse.Location = this.Location(uri, response);
+                    }
+                }
+            });
+
+            Logger.DebugFormat("Finish: {0}", uri);
+
+            return webResponse;
+        }
+
+        public WebResponse<TMessage> Delete<TMessage>(string uri, MdmRequestInfo requestInfo)
+        {
+            Logger.DebugFormat("Start: {0}", uri);
+
+            CheckAndPopulateRequestInfo(ref requestInfo);
+
+            var requestId = requestInfo.RequestId;
+
+            var webResponse = new WebResponse<TMessage>() { RequestId = requestId };
+
+            this.ResponseHandler(webResponse, uri, client =>
+            {
+                client.AddHeader(CoreConstants.UserNameHeader, GetUserName());
+                client.AddHeader(MdmConstants.MdmRequestHeaderName, requestInfo.Encode());
+
+                using (var response = client.Delete(uri))
+                {
+                    this.PopulateWebResponse(webResponse, response, HttpStatusCode.OK);
+                }
+            });
+
+            Logger.DebugFormat("Finish: {0}", uri);
+
+            return webResponse;
+        }
+
+        public WebResponse<TMessage> Update<TMessage>(string uri, string etag, TMessage message, MdmRequestInfo requestInfo)
+        {
+            Logger.DebugFormat("Start: {0}", uri);
+
+            CheckAndPopulateRequestInfo(ref requestInfo);
+
+            var requestId = requestInfo.RequestId;
+            var webResponse = new WebResponse<TMessage>() { RequestId = requestId };
+
+            this.ResponseHandler(webResponse, uri, client =>
+            {
+                client.AddHeader("If-Match", etag);
+                client.AddHeader(CoreConstants.UserNameHeader, GetUserName());
+                client.AddHeader(MdmConstants.MdmRequestHeaderName, requestInfo.Encode());
+
+                var content = new ObjectContent<TMessage>(message, new XmlMediaTypeFormatter());
+                using (var response = client.Post(uri, content))
+                {
+                    this.PopulateWebResponse(webResponse, response, HttpStatusCode.NoContent);
+
+                    if (webResponse.IsValid)
+                    {
+                        webResponse.Location = this.Location(uri, response);
+                    }
+                }
+            });
+
+            Logger.DebugFormat("Finish: {0}", uri);
+
+            return webResponse;
         }
     }
 }

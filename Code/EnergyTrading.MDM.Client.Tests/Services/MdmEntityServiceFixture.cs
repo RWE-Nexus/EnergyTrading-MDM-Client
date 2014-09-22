@@ -1,4 +1,6 @@
-﻿namespace EnergyTrading.Mdm.Client.Tests.Services
+﻿using System.Collections;
+
+namespace EnergyTrading.Mdm.Client.Tests.Services
 {
     using System;
     using System.Net;
@@ -15,6 +17,16 @@
     [TestFixture]
     public class MdmEntityServiceFixture : Fixture
     {
+
+        public IEnumerable MdmRequestInfoTestData
+        {
+            get
+            {
+                yield return new MdmRequestInfo { RequestId = "123", SourceSystem = "abc" };
+                yield return null;
+            }
+        }
+
         [Test]
         public void GetMissingEntityById()
         {
@@ -144,7 +156,7 @@
             var candidate = service.Get(identifier);
 
             // Assert
-            Assert.AreSame(expected, candidate, "Entities differ");            
+            Assert.AreSame(expected, candidate, "Entities differ");
         }
 
         [Test]
@@ -183,19 +195,36 @@
 
 
         [Test]
-        public void DeleteMapping()
+        public void DeleteMappingWithRequestInfo()
         {
             var requester = new Mock<IMessageRequester>();
             var service = new MdmEntityService<SourceSystem>("sourcesystem", requester.Object);
 
-            requester.Setup(x => x.Delete<SourceSystem>("sourcesystem/77/mapping/33")).Returns(new WebResponse<SourceSystem>() { Code = HttpStatusCode.OK, IsValid = true });
+            requester.Setup(x => x.Delete<SourceSystem>("sourcesystem/77/mapping/33", It.IsAny<MdmRequestInfo>())).Returns(new WebResponse<SourceSystem>() { Code = HttpStatusCode.OK, IsValid = true });
 
             // Act
             var result = service.DeleteMapping(77, 33);
 
             // Assert
-            Assert.AreEqual(HttpStatusCode.OK, result.Code, "Status code differ");            
-            Assert.AreEqual(true, result.IsValid, "IsValid differ");            
+            Assert.AreEqual(HttpStatusCode.OK, result.Code, "Status code differ");
+            Assert.AreEqual(true, result.IsValid, "IsValid differ");
+        }
+
+        [Test]
+        [TestCaseSource("MdmRequestInfoTestData")]
+        public void DeleteMapping(MdmRequestInfo requestInfo)
+        {
+            var requester = new Mock<IMessageRequester>();
+            var service = new MdmEntityService<SourceSystem>("sourcesystem", requester.Object);
+
+            requester.Setup(x => x.Delete<SourceSystem>("sourcesystem/77/mapping/33",requestInfo?? It.IsAny<MdmRequestInfo>())).Returns(new WebResponse<SourceSystem>() { Code = HttpStatusCode.OK, IsValid = true });
+
+            // Act
+            var result = (requestInfo == null) ? service.DeleteMapping(77, 33) : service.DeleteMapping(77, 33,requestInfo);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, result.Code, "Status code differ");
+            Assert.AreEqual(true, result.IsValid, "IsValid differ");
         }
 
         [Test]
@@ -203,42 +232,46 @@
         {
             var requester = new Mock<IMessageRequester>();
             var service = new MdmEntityService<SourceSystem>("sourcesystem", requester.Object);
-            var fault = new Fault() { Message = "faulting"};
+            var fault = new Fault() { Message = "faulting" };
 
-            requester.Setup(x => x.Delete<SourceSystem>("sourcesystem/77/mapping/33")).Returns(new WebResponse<SourceSystem>() { Code = HttpStatusCode.InternalServerError, IsValid = false, Fault = fault});
+            requester.Setup(x => x.Delete<SourceSystem>("sourcesystem/77/mapping/33", It.IsAny<MdmRequestInfo>())).Returns(new WebResponse<SourceSystem>() { Code = HttpStatusCode.InternalServerError, IsValid = false, Fault = fault });
 
             // Act
             var result = service.DeleteMapping(77, 33);
 
             // Assert
-            Assert.AreEqual(HttpStatusCode.InternalServerError, result.Code, "Status code differ");            
+            Assert.AreEqual(HttpStatusCode.InternalServerError, result.Code, "Status code differ");
             Assert.AreEqual(false, result.IsValid, "IsValid differ");
             Assert.AreEqual(fault, result.Fault, "Fault not returned");
         }
 
         [Test]
-        public void CreateEntity()
+        [TestCaseSource("MdmRequestInfoTestData")]
+        public void CreateEntity(MdmRequestInfo requestInfo)
         {
             var requester = new Mock<IMessageRequester>();
             var service = new MdmEntityService<SourceSystem>("sourcesystem", requester.Object);
             var sourcesystem = new SourceSystem();
             var response = new WebResponse<SourceSystem>() { Code = HttpStatusCode.OK, IsValid = true };
-
-            requester.Setup(x => x.Create("sourcesystem", sourcesystem)).Returns(response);
+            
+            requester.Setup(x => x.Create("sourcesystem", sourcesystem, requestInfo ?? It.IsAny<MdmRequestInfo>()))
+                .Returns(response);
+            
             requester.Setup(x => x.Request<SourceSystem>(It.IsAny<string>()))
                 .Returns(new WebResponse<SourceSystem>
                              {
-                                 IsValid = true, 
+                                 IsValid = true,
                                  Code = HttpStatusCode.OK,
-                                 Message = sourcesystem, 
+                                 Message = sourcesystem,
                              });
 
             // Act
-            var result = service.Create(sourcesystem);
+
+            var result = (requestInfo == null) ? service.Create(sourcesystem) : service.Create(sourcesystem, requestInfo);
 
             // Assert
-            Assert.AreEqual(HttpStatusCode.OK, result.Code, "Status code differ");            
-            Assert.AreEqual(true, result.IsValid, "IsValid differ");            
+            Assert.AreEqual(HttpStatusCode.OK, result.Code, "Status code differ");
+            Assert.AreEqual(true, result.IsValid, "IsValid differ");
         }
 
         [Test]
@@ -246,15 +279,15 @@
         {
             var requester = new Mock<IMessageRequester>();
             var service = new MdmEntityService<SourceSystem>("sourcesystem", requester.Object);
-            var fault = new Fault() { Message = "faulting"};
+            var fault = new Fault() { Message = "faulting" };
 
-            requester.Setup(x => x.Create<SourceSystem>(It.IsAny<string>(), It.IsAny<SourceSystem>())).Returns(new WebResponse<SourceSystem>() { Code = HttpStatusCode.InternalServerError, IsValid = false, Fault = fault});
+            requester.Setup(x => x.Create<SourceSystem>(It.IsAny<string>(), It.IsAny<SourceSystem>(), It.IsAny<MdmRequestInfo>())).Returns(new WebResponse<SourceSystem>() { Code = HttpStatusCode.InternalServerError, IsValid = false, Fault = fault });
 
             // Act
             var result = service.Create(new SourceSystem());
 
             // Assert
-            Assert.AreEqual(HttpStatusCode.InternalServerError, result.Code, "Status code differ");            
+            Assert.AreEqual(HttpStatusCode.InternalServerError, result.Code, "Status code differ");
             Assert.AreEqual(false, result.IsValid, "IsValid differ");
             Assert.AreEqual(fault, result.Fault, "Fault not returned");
         }

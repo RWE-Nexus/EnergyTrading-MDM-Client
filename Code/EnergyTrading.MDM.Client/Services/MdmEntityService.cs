@@ -64,65 +64,12 @@
 
         public WebResponse<MdmId> CreateMapping(int id, MdmId identifier)
         {
-            if (Logger.IsDebugEnabled)
-            {
-                Logger.DebugFormat("CreateMapping<{0}>: {1} - {2}", typeof(TContract).Name, id, identifier);
-            }
-            var mapping = new Mapping
-            {
-                // TODO: Flesh out the rest
-                SystemName = identifier.SystemName,
-                Identifier = identifier.Identifier,
-                DefaultReverseInd = identifier.DefaultReverseInd,
-            };
-
-            var uri = string.Format(this.mappingUri, id);
-            var response = this.Create<MdmId, MappingResponse>(uri, mapping);
-            if (response.IsValid)
-            {
-                return new WebResponse<MdmId>
-                {
-                    Code = HttpStatusCode.OK,
-                    Message = response.Message.Mappings[0]
-                };
-            }
-
-            return new WebResponse<MdmId>
-            {
-                IsValid = false,
-                Code = response.Code,
-                Fault = response.Fault
-            };
+            return CreateMapping(id, identifier, null);
         }
 
         public WebResponse<TContract> DeleteMapping(int entityId, int mappingId)
         {
-            if (Logger.IsDebugEnabled)
-            {
-                Logger.DebugFormat("DeleteMapping<{0}>: {1} - {2}", typeof(TContract).Name, entityId, mappingId);
-            }
-
-            var uri = string.Format(this.deleteMappingUri, entityId, mappingId);
-
-            var response = this.requester.Delete<TContract>(uri);
-
-            if (response.IsValid)
-            {
-                return new WebResponse<TContract>
-                {
-                    Code = HttpStatusCode.OK,
-                    IsValid = true
-                };
-            }
-
-            LogResponse(mappingId, response, null, "DeleteMapping");
-
-            return new WebResponse<TContract>
-            {
-                Code = response.Code,
-                IsValid = false,
-                Fault = response.Fault
-            };
+            return DeleteMapping(entityId, mappingId, null);
         }
 
         public WebResponse<TContract> Get(int id)
@@ -183,30 +130,7 @@
 
         public WebResponse<TContract> Create(TContract contract)
         {
-            if (Logger.IsDebugEnabled)
-            {
-                Logger.DebugFormat("Create<{0}>", typeof(TContract).Name);
-            }
-
-            var response = this.Create(this.BaseUri, contract);
-
-            if (response.IsValid)
-            {
-                this.ProcessContract(response);
-            }
-            else
-            {
-                if (contract.Identifiers != null && contract.Identifiers.Any())
-                {
-                    LogResponse(response, "Create<{0}> - {1}", typeof(TContract).Name, contract.Identifiers.First().Identifier);
-                }
-                else
-                {
-                    LogResponse(response, "Create<{0}>", typeof(TContract).Name);
-                }
-            }
-
-            return response;
+            return Create(contract, null);
         }
 
         public WebResponse<MdmId> GetMapping(int id, Predicate<MdmId> query)
@@ -312,11 +236,122 @@
 
         public WebResponse<TContract> Update(int id, TContract contract, string etag)
         {
+            return Update(id,contract,etag,null);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="contract"></param>
+        /// <param name="requestInfo"></param>
+        /// <returns></returns>
+        public WebResponse<TContract> Create(TContract contract, MdmRequestInfo requestInfo)
+        {
+            if (Logger.IsDebugEnabled)
+            {
+                Logger.DebugFormat("Create<{0}>", typeof(TContract).Name);
+            }
+
+            var response = this.Create(this.BaseUri, contract, requestInfo);
+
+            if (response.IsValid)
+            {
+                this.ProcessContract(response);
+            }
+            else
+            {
+                if (contract.Identifiers != null && contract.Identifiers.Any())
+                {
+                    LogResponse(response, "Create<{0}> - {1}", typeof(TContract).Name, contract.Identifiers.First().Identifier);
+                }
+                else
+                {
+                    LogResponse(response, "Create<{0}>", typeof(TContract).Name);
+                }
+            }
+            return response;
+        }
+
+        public WebResponse<MdmId> CreateMapping(int id, MdmId identifier, MdmRequestInfo requestInfo)
+        {
+            if (Logger.IsDebugEnabled)
+            {
+                Logger.DebugFormat("CreateMapping<{0}>: {1} - {2}", typeof(TContract).Name, id, identifier);
+            }
+            var mapping = new Mapping
+            {
+                // TODO: Flesh out the rest
+                SystemName = identifier.SystemName,
+                Identifier = identifier.Identifier,
+                DefaultReverseInd = identifier.DefaultReverseInd,
+            };
+
+            var uri = string.Format(this.mappingUri, id);
+            var response = this.Create<MdmId, MappingResponse>(uri, mapping, requestInfo);
+            if (response.IsValid)
+            {
+                return new WebResponse<MdmId>
+                {
+                    Code = HttpStatusCode.OK,
+                    Message = response.Message.Mappings[0],
+                    RequestId = response.RequestId
+                };
+            }
+
+            return new WebResponse<MdmId>
+            {
+                IsValid = false,
+                Code = response.Code,
+                Fault = response.Fault,
+                RequestId = response.RequestId
+            };
+        }
+
+        public WebResponse<TContract> DeleteMapping(int entityId, int mappingId, MdmRequestInfo requestInfo)
+        {
+            if (Logger.IsDebugEnabled)
+            {
+                Logger.DebugFormat("DeleteMapping<{0}>: {1} - {2}", typeof(TContract).Name, entityId, mappingId);
+            }
+
+            var uri = string.Format(this.deleteMappingUri, entityId, mappingId);
+
+            var response = this.requester.Delete<TContract>(uri, requestInfo);
+
+            if (response.IsValid)
+            {
+                return new WebResponse<TContract>
+                {
+                    Code = HttpStatusCode.OK,
+                    IsValid = true,
+                    RequestId = response.RequestId
+                };
+            }
+
+            LogResponse(mappingId, response, null, "DeleteMapping");
+
+            return new WebResponse<TContract>
+            {
+                Code = response.Code,
+                IsValid = false,
+                Fault = response.Fault,
+                RequestId = response.RequestId
+            };
+        }
+
+        public WebResponse<TContract> Update(int id, TContract contract, MdmRequestInfo requestInfo)
+        {
+            return Update(id, contract, this.etags[id], requestInfo);
+        }
+
+        public WebResponse<TContract> Update(int id, TContract contract, string etag, MdmRequestInfo requestInfo)
+        {
             if (Logger.IsDebugEnabled)
             {
                 Logger.DebugFormat("Update<{0}>: {1} {2}", typeof(TContract).Name, id, etag);
             }
-            var response = this.requester.Update(string.Format(this.entityUri, id), etag, contract);
+
+            var response = this.requester.Update(string.Format(this.entityUri, id), etag, contract, requestInfo);
 
             if (!response.IsValid)
             {
@@ -331,6 +366,9 @@
             }
 
             var r2 = this.requester.Request<TContract>(response.Location + queryString);
+
+            r2.RequestId = response.RequestId;
+
             // TODO: Should this just be a IsValid check?
             if (r2.Code == HttpStatusCode.OK)
             {
@@ -370,17 +408,22 @@
             return response;
         }
 
-        private WebResponse<TMessage> Create<TMessage>(string uri, TMessage message) where TMessage : class
+        private WebResponse<TMessage> Create<TMessage>(string uri, TMessage message, MdmRequestInfo requestInfo) where TMessage : class
         {
-            return this.Create<TMessage, TMessage>(uri, message);
+            return this.Create<TMessage, TMessage>(uri, message,requestInfo);
         }
 
-        private WebResponse<TResponse> Create<TMessage, TResponse>(string uri, TMessage message) where TResponse : class
+        private WebResponse<TResponse> Create<TMessage, TResponse>(string uri, TMessage message, MdmRequestInfo requestInfo) where TResponse : class
         {
-            var request = this.requester.Create(uri, message);
-            return request.IsValid ?
-                   this.requester.Request<TResponse>(request.Location) :
-                   new WebResponse<TResponse> { Code = request.Code, IsValid = false, Fault = request.Fault };
+            var request = this.requester.Create(uri, message, requestInfo);
+            var response = new WebResponse<TResponse> {Code = request.Code, IsValid = false, RequestId = request.RequestId, Fault = request.Fault};
+            
+            if (!request.IsValid) return response;
+
+            response = this.requester.Request<TResponse>(request.Location);
+            response.RequestId = request.RequestId;
+
+            return response;
         }
 
         private WebResponse<TContract> GetContract(string uri)

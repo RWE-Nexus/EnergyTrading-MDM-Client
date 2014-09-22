@@ -17,8 +17,9 @@
         public WebResponse()
         {
             this.IsValid = true;
+            RequestId = new Guid().ToString();
         }
-
+       
         /// <summary>
         /// Status code returned by the call
         /// </summary>
@@ -53,5 +54,10 @@
         /// The returned location header
         /// </summary>
         public string Location { get; set; }
+
+        /// <summary>
+        /// Each request to MDM would have unique identifier to identify the call
+        /// </summary>
+        public string RequestId { get; set; }
     }
 }

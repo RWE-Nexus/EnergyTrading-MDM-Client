@@ -159,5 +159,37 @@
             }
             return this.factory.EntityService<TContract>(version).Update(id, entity, etag);
         }
+
+        public WebResponse<TContract> Create<TContract>(TContract contract, MdmRequestInfo requestInfo, uint version = 0) where TContract : IMdmEntity
+        {
+            if (Logger.IsDebugEnabled)
+            {
+                Logger.DebugFormat("Create<{0}>", typeof(TContract).Name);
+            }
+            return this.factory.EntityService<TContract>(version).Create(contract, requestInfo);
+        }
+
+        public WebResponse<MdmId> CreateMapping<TContract>(int id, MdmId identifier, MdmRequestInfo requestInfo, uint version = 0) where TContract : IMdmEntity
+        {
+            if (Logger.IsDebugEnabled)
+            {
+                Logger.DebugFormat("CreateMapping<{0}>: {1} {2}", typeof(TContract).Name, id, identifier);
+            }
+            return this.factory.EntityService<TContract>(version).CreateMapping(id, identifier, requestInfo);
+        }
+
+        public WebResponse<TContract> DeleteMapping<TContract>(int entityId, int mappingId, MdmRequestInfo requestInfo, uint version = 0) where TContract : IMdmEntity
+        {
+            return this.factory.EntityService<TContract>(version).DeleteMapping(entityId, mappingId, requestInfo);
+        }
+
+        public WebResponse<TContract> Update<TContract>(int id, TContract contract, string etag, MdmRequestInfo requestInfo, uint version = 0) where TContract : IMdmEntity
+        {
+            if (Logger.IsDebugEnabled)
+            {
+                Logger.DebugFormat("Update<{0}>: {1} {2}", typeof(TContract).Name, id, etag);
+            }
+            return this.factory.EntityService<TContract>(version).Update(id, contract, etag, requestInfo);
+        }
     }
 }

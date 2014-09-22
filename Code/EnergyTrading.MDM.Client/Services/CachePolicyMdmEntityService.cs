@@ -177,49 +177,19 @@
         /// <copydocfrom cref="IMdmEntityService{T}.Create(T)" />
         public WebResponse<TContract> Create(TContract contract)
         {
-            try
-            {
-                Logger.DebugFormat("Start: Create<{0}>", this.entityName);
-                var response = this.service.Create(contract);
-                if (response.IsValid)
-                {
-                    this.ProcessContract(response);
-                }
-
-                return response;
-            }
-            finally
-            {
-                Logger.DebugFormat("Stop: Create<{0}>", this.entityName);
-            }
+            return Create(contract, null);
         }
 
         /// <copydocfrom cref="IMdmEntityService{T}.CreateMapping(int, MdmId)" />
         public WebResponse<MdmId> CreateMapping(int id, MdmId identifier)
         {
-            try
-            {
-                Logger.DebugFormat("Start: CreateMapping<{0}>: {1}", this.entityName, identifier);
-                return this.service.CreateMapping(id, identifier);
-            }
-            finally
-            {
-                Logger.DebugFormat("Stop: CreateMapping<{0}>: {1}", this.entityName, identifier);
-            }
+            return CreateMapping(id, identifier, null);
         }
 
         /// <copydocfrom cref="IMdmEntityService{T}.DeleteMapping(int, int)" />
         public WebResponse<TContract> DeleteMapping(int entityEntityId, int mappingId)
         {
-            try
-            {
-                Logger.DebugFormat("Start: DeleteMapping<{0}>: {1} - {2}", this.entityName, entityEntityId, mappingId);
-                return this.service.DeleteMapping(entityEntityId, mappingId);
-            }
-            finally
-            {
-                Logger.DebugFormat("Stop: DeleteMapping<{0}>: {1} - {2}", this.entityName, entityEntityId, mappingId);
-            }
+            return DeleteMapping(entityEntityId, mappingId);
         }
 
         /// <copydocfrom cref="IMdmEntityService{T}.GetMapping(int, Predicate{MdmId})" />
@@ -339,10 +309,65 @@
         /// <copydocfrom cref="IMdmEntityService{T}.Update(int, T, string)" />
         public WebResponse<TContract> Update(int id, TContract contract, string etag)
         {
+            return Update(id, contract, etag, null);
+        }
+
+        public WebResponse<TContract> Create(TContract contract, MdmRequestInfo requestInfo)
+        {
+            try
+            {
+                Logger.DebugFormat("Start: Create<{0}>", this.entityName);
+                var response = this.service.Create(contract);
+                if (response.IsValid)
+                {
+                    this.ProcessContract(response);
+                }
+
+                return response;
+            }
+            finally
+            {
+                Logger.DebugFormat("Stop: Create<{0}>", this.entityName);
+            }
+        }
+
+        public WebResponse<MdmId> CreateMapping(int id, MdmId identifier, MdmRequestInfo requestInfo)
+        {
+            try
+            {
+                Logger.DebugFormat("Start: CreateMapping<{0}>: {1}", this.entityName, identifier);
+                return this.service.CreateMapping(id, identifier);
+            }
+            finally
+            {
+                Logger.DebugFormat("Stop: CreateMapping<{0}>: {1}", this.entityName, identifier);
+            }
+        }
+
+        public WebResponse<TContract> DeleteMapping(int entityId, int mappingId, MdmRequestInfo requestInfo)
+        {
+            try
+            {
+                Logger.DebugFormat("Start: DeleteMapping<{0}>: {1} - {2}", this.entityName, entityId, mappingId);
+                return this.service.DeleteMapping(entityId, mappingId);
+            }
+            finally
+            {
+                Logger.DebugFormat("Stop: DeleteMapping<{0}>: {1} - {2}", this.entityName, entityId, mappingId);
+            }
+        }
+
+        public WebResponse<TContract> Update(int id, TContract contract, MdmRequestInfo requestInfo)
+        {
+            return Update(id, contract, this.etags[id], requestInfo);
+        }
+
+        public WebResponse<TContract> Update(int id, TContract contract, string etag, MdmRequestInfo requestInfo)
+        {
             try
             {
                 Logger.DebugFormat("Start: Update<{0}> - {1}", this.entityName, id);
-                var response = this.service.Update(id, contract, etag);
+                var response = this.service.Update(id, contract, etag,requestInfo);
                 if (response.IsValid)
                 {
                     this.ProcessContract(response);

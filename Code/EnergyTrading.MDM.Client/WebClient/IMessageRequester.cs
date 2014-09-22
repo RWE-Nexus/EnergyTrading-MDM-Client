@@ -53,5 +53,34 @@
         /// <param name="message"></param>
         /// <returns></returns>
         WebResponse<TMessage> Update<TMessage>(string uri, string etag, TMessage message);
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <param name="message"></param>
+        /// <param name="requestInfo"></param>
+        /// <typeparam name="TMessage"></typeparam>
+        /// <returns></returns>
+        WebResponse<TMessage> Create<TMessage>(string uri, TMessage message, MdmRequestInfo requestInfo);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <param name="requestInfo"></param>
+        /// <typeparam name="TMessage"></typeparam>
+        /// <returns></returns>
+        WebResponse<TMessage> Delete<TMessage>(string uri, MdmRequestInfo requestInfo);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <param name="etag"></param>
+        /// <param name="message"></param>
+        /// <param name="requestInfo"></param>
+        /// <typeparam name="TMessage"></typeparam>
+        /// <returns></returns>
+        WebResponse<TMessage> Update<TMessage>(string uri, string etag, TMessage message, MdmRequestInfo requestInfo);
     }
 }
