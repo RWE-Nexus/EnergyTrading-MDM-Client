@@ -317,7 +317,7 @@
             try
             {
                 Logger.DebugFormat("Start: Create<{0}>", this.entityName);
-                var response = this.service.Create(contract);
+                var response = this.service.Create(contract, requestInfo);
                 if (response.IsValid)
                 {
                     this.ProcessContract(response);
@@ -336,7 +336,7 @@
             try
             {
                 Logger.DebugFormat("Start: CreateMapping<{0}>: {1}", this.entityName, identifier);
-                return this.service.CreateMapping(id, identifier);
+                return this.service.CreateMapping(id, identifier, requestInfo);
             }
             finally
             {
@@ -349,7 +349,7 @@
             try
             {
                 Logger.DebugFormat("Start: DeleteMapping<{0}>: {1} - {2}", this.entityName, entityId, mappingId);
-                return this.service.DeleteMapping(entityId, mappingId);
+                return this.service.DeleteMapping(entityId, mappingId, requestInfo);
             }
             finally
             {

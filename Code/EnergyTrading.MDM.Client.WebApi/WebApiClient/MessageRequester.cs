@@ -221,7 +221,7 @@
             return ContextInfoProvider.GetUserName();
         }
 
-        private static MdmRequestInfo CheckAndPopulateRequestInfo(ref MdmRequestInfo requestInfo)
+        private static void CheckAndPopulateRequestInfo(ref MdmRequestInfo requestInfo)
         {
             if (requestInfo == null)
             {
@@ -237,8 +237,6 @@
             {
                 requestInfo.SourceSystem = ConfigurationManager.AppSettings[MdmConstants.MdmRequestSourceSystemName];
             }
-
-            return requestInfo;
         }
 
 
