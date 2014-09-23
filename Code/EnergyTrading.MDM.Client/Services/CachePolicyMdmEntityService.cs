@@ -189,7 +189,7 @@
         /// <copydocfrom cref="IMdmEntityService{T}.DeleteMapping(int, int)" />
         public WebResponse<TContract> DeleteMapping(int entityEntityId, int mappingId)
         {
-            return DeleteMapping(entityEntityId, mappingId);
+            return DeleteMapping(entityEntityId, mappingId, null);
         }
 
         /// <copydocfrom cref="IMdmEntityService{T}.GetMapping(int, Predicate{MdmId})" />
