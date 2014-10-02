@@ -124,6 +124,7 @@
     <Compile Include="Registrars\MdmClientRegistrarFixture.cs" />
     <Compile Include="Services\CachePolicyMdmEntityServiceFixture.cs" />
     <Compile Include="Services\CachingMdmEntityServiceFixture.cs" />
+    <Compile Include="Services\MdmCacheServiceFixture.cs" />
     <Compile Include="Services\MdmEntityServiceFixture.cs" />
     <Compile Include="Services\SearchCacheFixture.cs" />
     <Compile Include="Services\SearchSerializationFixture.cs" />

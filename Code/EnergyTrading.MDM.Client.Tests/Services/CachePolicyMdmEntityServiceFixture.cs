@@ -29,7 +29,7 @@ namespace EnergyTrading.Mdm.Client.Tests.Services
             // Given
             var mockMdmEntityService = new Mock<IMdmEntityService<SourceSystem>>();
             var mockConfigManager = new Mock<IConfigurationManager>();
-            var inmemoryCacheRepo = new InMemoryCacheRepository();
+            var inmemoryCacheRepo =new DefaultMdmClientCacheRepository(new InMemoryCacheRepository());
 
             mockConfigManager.Setup(x => x.AppSettings).Returns(new NameValueCollection { { "CacheItemPolicy.Expiration." + CacheKey, "3500" } });
             var cachePolicyFactory = new AbsoluteCacheItemPolicyFactory(CacheKey, mockConfigManager.Object);
@@ -68,7 +68,7 @@ namespace EnergyTrading.Mdm.Client.Tests.Services
             // Given
             var mockMdmEntityService = new Mock<IMdmEntityService<SourceSystem>>();
             var mockConfigManager = new Mock<IConfigurationManager>();
-            var inmemoryCacheRepo = new InMemoryCacheRepository();
+            var inmemoryCacheRepo = new DefaultMdmClientCacheRepository(new InMemoryCacheRepository());
             mockConfigManager.Setup(x => x.AppSettings).Returns(new NameValueCollection { { "CacheItemPolicy.Expiration." + CacheKey, "3500" } });
             var cachePolicyFactory = new AbsoluteCacheItemPolicyFactory(CacheKey, mockConfigManager.Object);
             var locationEntityService = new CachePolicyMdmEntityService<SourceSystem>(mockMdmEntityService.Object, cachePolicyFactory,inmemoryCacheRepo);
@@ -107,7 +107,7 @@ namespace EnergyTrading.Mdm.Client.Tests.Services
             // Given
             var mockMdmEntityService = new Mock<IMdmEntityService<SourceSystem>>();
             var mockConfigManager = new Mock<IConfigurationManager>();
-            var inmemoryCacheRepo = new InMemoryCacheRepository();
+            var inmemoryCacheRepo = new DefaultMdmClientCacheRepository(new InMemoryCacheRepository());
             mockConfigManager.Setup(x => x.AppSettings).Returns(new NameValueCollection { { "CacheItemPolicy.Expiration." + CacheKey, "3500" } });
 
             var cachePolicyFactory = new AbsoluteCacheItemPolicyFactory(CacheKey, mockConfigManager.Object);
@@ -139,5 +139,9 @@ namespace EnergyTrading.Mdm.Client.Tests.Services
             response.Code.Should().Be(HttpStatusCode.OK);
             response.Message.ToMdmId().Identifier.Should().Be(nexusId.Identifier);
         }
+   
+    
+
+    
     }
 }

@@ -91,7 +91,10 @@
     <Compile Include="Constants\MdmConstants.cs" />
     <Compile Include="Extensions\MdmRequestInfoExtensions.cs" />
     <Compile Include="Extensions\SearchExtensions.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\WebResponseUtility.cs" />
+    <Compile Include="Services\IMdmClientCacheRepository.cs" />
+    <Compile Include="Services\IMdmClientCacheService.cs" />
     <Compile Include="Model\IMdmModelEntity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\CachePolicyMdmEntityService.cs" />
@@ -106,6 +109,8 @@
     <Compile Include="Services\IMdmService.cs" />
     <Compile Include="Services\IReferenceDataService.cs" />
     <Compile Include="Services\LocatorMdmModelEntityServiceFactory.cs" />
+    <Compile Include="Services\DefaultMdmClientCacheRepository.cs" />
+    <Compile Include="Services\DefaultMdmClientCacheService.cs" />
     <Compile Include="Services\MdmEntityLocatorFactory.cs" />
     <Compile Include="Services\MdmModelEntityService.cs" />
     <Compile Include="Services\MdmEntityServiceFactoryMdmEntityLocator.cs" />

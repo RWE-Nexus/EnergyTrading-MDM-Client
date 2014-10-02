@@ -49,6 +49,7 @@ namespace EnergyTrading.Mdm.Client.WebApi.Registrars
 
             //Register Cache service
             InMemoryCacheRegistrar.Register(container);
+            container.RegisterType<IMdmClientCacheRepository, DefaultMdmClientCacheRepository>();
 
             // Requester
             container.RegisterType<IMessageRequester, MessageRequester>();
@@ -100,11 +101,11 @@ namespace EnergyTrading.Mdm.Client.WebApi.Registrars
                 // Singleton as we have a cache but named according to version if necessary
                 if (version == 0)
                 {
-                    container.RegisterType<IMdmEntityService<T>, CachePolicyMdmEntityService<T>>(new ContainerControlledLifetimeManager(), new InjectionConstructor(new ResolvedParameter<IMdmEntityService<T>>(url), new ResolvedParameter<ICacheItemPolicyFactory>(cachekey), new ResolvedParameter<ICacheRepository>(), version));
+                    container.RegisterType<IMdmEntityService<T>, CachePolicyMdmEntityService<T>>(new ContainerControlledLifetimeManager(), new InjectionConstructor(new ResolvedParameter<IMdmEntityService<T>>(url), new ResolvedParameter<ICacheItemPolicyFactory>(cachekey), new ResolvedParameter<IMdmClientCacheRepository>(), version));
                 }
                 else
                 {
-                    container.RegisterType<IMdmEntityService<T>, CachePolicyMdmEntityService<T>>("V" + version, new ContainerControlledLifetimeManager(), new InjectionConstructor(new ResolvedParameter<IMdmEntityService<T>>(url), new ResolvedParameter<ICacheItemPolicyFactory>(cachekey), new ResolvedParameter<ICacheRepository>(), version));
+                    container.RegisterType<IMdmEntityService<T>, CachePolicyMdmEntityService<T>>("V" + version, new ContainerControlledLifetimeManager(), new InjectionConstructor(new ResolvedParameter<IMdmEntityService<T>>(url), new ResolvedParameter<ICacheItemPolicyFactory>(cachekey), new ResolvedParameter<IMdmClientCacheRepository>(), version));
                 }
             }
             else

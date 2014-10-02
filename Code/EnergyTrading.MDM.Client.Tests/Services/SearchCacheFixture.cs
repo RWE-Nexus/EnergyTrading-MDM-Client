@@ -31,7 +31,7 @@ namespace EnergyTrading.Mdm.Client.Tests.Services
             this.mdmService = new Mock<IMdmEntityService<SourceSystem>>();
             this.policyFactory = new Mock<ICacheItemPolicyFactory>();
             this.policy = new CacheItemPolicy();
-            var inmemoryCacheRepo = new InMemoryCacheRepository();
+            var inmemoryCacheRepo =new DefaultMdmClientCacheRepository(new InMemoryCacheRepository());
             this.policyFactory.Setup(x => x.CreatePolicy()).Returns(this.policy);
 
             this.cacheService = new CachePolicyMdmEntityService<SourceSystem>(this.mdmService.Object, this.policyFactory.Object,inmemoryCacheRepo);           

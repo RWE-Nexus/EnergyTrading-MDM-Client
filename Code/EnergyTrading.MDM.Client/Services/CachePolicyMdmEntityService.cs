@@ -1,4 +1,7 @@
-﻿namespace EnergyTrading.Mdm.Client.Services
+﻿using System.Diagnostics.Contracts;
+using EnergyTrading.Mdm.Client.Extensions;
+
+namespace EnergyTrading.Mdm.Client.Services
 {
     using System;
     using System.Collections.Generic;
@@ -24,14 +27,13 @@
         private readonly static ILogger Logger = LoggerFactory.GetLogger(typeof(CachePolicyMdmEntityService<TContract>));
 
         private readonly IMdmEntityService<TContract> service;
-        private readonly ICacheService cache;
-        private readonly ICacheService searchCache;
+        private readonly IMdmClientCacheService cache;
+        private readonly IMdmClientCacheService searchCache;
         private readonly ICacheItemPolicyFactory cacheItemPolicyFactory;
-        private readonly Dictionary<MdmId, int> mappings;
         private readonly Dictionary<int, string> etags;
         private readonly string entityName;
         private readonly object syncLock;
-        private readonly ICacheRepository cacheRepository;
+        private readonly IMdmClientCacheRepository cacheRepository;
         private readonly uint contractVersion;
 
         /// <summary>
@@ -39,15 +41,14 @@
         /// </summary>
         /// <param name="service"></param>
         /// <param name="cacheItemPolicyFactory"></param>
-        public CachePolicyMdmEntityService(IMdmEntityService<TContract> service, ICacheItemPolicyFactory cacheItemPolicyFactory,ICacheRepository cacheRepository, uint version = 0)
+        public CachePolicyMdmEntityService(IMdmEntityService<TContract> service, ICacheItemPolicyFactory cacheItemPolicyFactory,IMdmClientCacheRepository mdmCacheRepository, uint version = 0)
         {
             this.service = service;
-            this.cacheName = "Mdm." + typeof(TContract).Name + (version > 0 ? "V" + version : string.Empty);
-            this.cacheRepository = cacheRepository;
+            this.cacheName = typeof(TContract).GetCacheNameFromEntityType(version);
+            this.cacheRepository = mdmCacheRepository;
             this.cache = cacheRepository.GetNamedCache(cacheName);
             this.searchCache = cacheRepository.GetNamedCache("MDMSearchResultsCache");
             this.cacheItemPolicyFactory = cacheItemPolicyFactory;
-            this.mappings = new Dictionary<MdmId, int>();
             this.etags = new Dictionary<int, string>();
             this.syncLock = new object();
             this.entityName = typeof(TContract).Name;
@@ -63,7 +64,7 @@
 
         public int MappingCount
         {
-            get { return this.mappings.Count; }
+            get { return 0; }
         }
 
         /// <summary>
@@ -156,14 +157,10 @@
                     }
                 }
 
-                int entityId;
-                if (this.mappings.TryGetValue(identifier, out entityId))
+                var entity= cache.Get<TContract>(identifier);
+                if (entity != null)
                 {
-                    var entity = this.CheckCache(entityId);
-                    if (entity != null)
-                    {
-                        return new WebResponse<TContract> { Code = HttpStatusCode.OK, Message = entity, IsValid = true };
-                    }
+                    return new WebResponse<TContract> { Code = HttpStatusCode.OK, Message = entity, IsValid = true };
                 }
 
                 return this.AcquireEntity(identifier, () => this.service.Get(identifier, validAt));
@@ -227,12 +224,8 @@
                     return;
                 }
 
-                this.cache.Remove(id.ToString(CultureInfo.InvariantCulture));
+                cache.Remove(id);
 
-                foreach (var nexus in entity.Identifiers)
-                {
-                    this.mappings.Remove(nexus);
-                }
             }
         }
 
@@ -421,15 +414,10 @@
             // NB Single-threaded on requests, but can't avoid that somewhere 
             lock (this.syncLock)
             {
-                int entityId;
-                if (this.mappings.TryGetValue(sourceIdentifier, out entityId))
+                var entity = cache.Get<TContract>(sourceIdentifier);
+                if (entity != null)
                 {
-                    // Can do this as we are in a locked section
-                    var entity = this.CheckCache(entityId);
-                    if (entity != null)
-                    {
-                        return new WebResponse<TContract> { Code = HttpStatusCode.OK, Message = entity, IsValid = true};
-                    }
+                    return new WebResponse<TContract> { Code = HttpStatusCode.OK, Message = entity, IsValid = true };
                 }
 
                 // Otherwise process the response from the web call
@@ -444,7 +432,7 @@
 
         private TContract CheckCache(int id)
         {
-            return this.cache.Get<TContract>(id.ToString(CultureInfo.InvariantCulture));
+            return this.cache.Get<TContract>(id);
         }
 
         private PagedWebResponse<IList<TContract>> CheckSearchCache(string key)
@@ -462,23 +450,11 @@
             try
             {
                 var entity = reponse.Message;
-                var nexus = entity.ToMdmId();
                 var id = entity.ToMdmKey();
 
                 lock (this.syncLock)
                 {
-                    this.cache.Add(id.ToString(CultureInfo.InvariantCulture), entity, this.cacheItemPolicyFactory.CreatePolicy());
-
-                    foreach (var identifier in entity.Identifiers)
-                    {
-                        if (identifier == nexus || this.mappings.ContainsKey(identifier))
-                        {
-                            continue;
-                        }
-
-                        this.mappings[identifier] = id;
-                    }
-
+                    this.cache.Add(entity, this.cacheItemPolicyFactory.CreatePolicy());
                     this.etags[id] = reponse.Tag;
                 }
             }
