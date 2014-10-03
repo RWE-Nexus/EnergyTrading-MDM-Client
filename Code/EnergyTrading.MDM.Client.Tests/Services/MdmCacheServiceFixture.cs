@@ -32,7 +32,9 @@ namespace EnergyTrading.Mdm.Client.Tests.Services
         {
             var testMdmObject = GetTestObject<SourceSystem>();
             mdmClientCacheService.Add(testMdmObject);
-            Assert.AreEqual( testMdmObject.Identifiers.Count(a => !a.IsMdmId) + 2,inMemoryTestClass.CachedItemsCount);
+            var numberOfMappings = testMdmObject.Identifiers.Count(a => !a.IsMdmId);
+            //4=2 Mappings + 1 Entity + 1 EnityToMapList
+            Assert.AreEqual(numberOfMappings + 2, inMemoryTestClass.CachedItemsCount);
         }
 
 
@@ -126,8 +128,21 @@ namespace EnergyTrading.Mdm.Client.Tests.Services
             Assert.AreEqual(0, inMemoryTestClass.CachedItemsCount);
         }
 
-        
 
+        [Test]
+        public void WhenEntityContainsEmptyMappingsItShouldnotBeCached()
+        {
+            var testMdmObject1 = GetTestObject<SourceSystem>();
+
+            testMdmObject1.Identifiers.Add(new MdmId { SystemName = "XYZ", Identifier = "" });
+            testMdmObject1.Identifiers.Add(new MdmId { SystemName = "", Identifier = "" });
+            testMdmObject1.Identifiers.Add(new MdmId { SystemName = null, Identifier = "ac" });
+            testMdmObject1.Identifiers.Add(new MdmId { SystemName = "ac", Identifier = null });
+           
+            mdmClientCacheService.Add(testMdmObject1);
+
+            Assert.AreEqual(4, inMemoryTestClass.CachedItemsCount);
+        }
 
 
         private TContract GetTestObject<TContract>() where TContract : class,IMdmEntity, new()
@@ -152,7 +167,6 @@ namespace EnergyTrading.Mdm.Client.Tests.Services
                                                SystemName = "Nexus", Identifier = Guid.NewGuid().GetHashCode().ToString(), IsMdmId = true
                                            }
                                        },
-                //Details = { Name = "TestSystem" }
             };
 
             return sourceSystem;
@@ -195,7 +209,5 @@ namespace EnergyTrading.Mdm.Client.Tests.Services
                 return (T)cache.Get(key);
             }
         }
-
-
     }
 }

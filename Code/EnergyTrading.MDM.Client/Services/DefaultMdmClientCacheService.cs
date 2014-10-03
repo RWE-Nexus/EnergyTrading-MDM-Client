@@ -45,7 +45,9 @@ namespace EnergyTrading.Mdm.Client.Services
                 }
             }
 
-            var identifier = cacheService.Get<int?>(CreateCacheKeyFromMdmId(mdmId));
+            var mdmIdCacheKey = CreateCacheKeyFromMdmId(mdmId);
+
+            var identifier = Get<int?>(mdmIdCacheKey);
 
             if (identifier.HasValue)
             {
@@ -53,7 +55,7 @@ namespace EnergyTrading.Mdm.Client.Services
                 //If mapping doesnt belong to entity (may be mapping got removed) then clear it from cache
                 if (entity == null || !entity.Identifiers.Any(a => a.Identifier == mdmId.Identifier && a.SystemName == mdmId.SystemName))
                 {
-                    cacheService.Remove(CreateCacheKeyFromMdmId(mdmId));
+                    Remove(mdmIdCacheKey);
                     entity = null;
                 }
             }
@@ -66,9 +68,9 @@ namespace EnergyTrading.Mdm.Client.Services
         /// </summary>
         /// <param name="identifier"></param>
         /// <returns></returns>
-        public TContract Get<TContract>(int identifier) where TContract : class,IMdmEntity
+        public TContract Get<TContract>(int identifier) where TContract : class, IMdmEntity
         {
-            var entity = cacheService.Get<TContract>(identifier.ToString(CultureInfo.InvariantCulture));
+            var entity = Get<TContract>(identifier.ToString(CultureInfo.InvariantCulture));
 
             return entity;
         }
@@ -81,21 +83,22 @@ namespace EnergyTrading.Mdm.Client.Services
         public bool Remove(int mdmIdentifier)
         {
             var cacheKey = CreateCacheKeyFromIdentifierForMappings(mdmIdentifier);
-            var mappingList = cacheService.Get<MdmIdList>(cacheKey);
+            var mappingList = Get<MdmIdList>(cacheKey);
 
             if (mappingList != null)
             {
-                //Remove Mapping to Identifier cache items
+                //Remove "Mapping id to Identifier" cache items
                 foreach (var map in mappingList)
                 {
-                    cacheService.Remove(CreateCacheKeyFromMdmId(map));
+                    Remove(CreateCacheKeyFromMdmId(map));
                 }
             }
 
             //Remove Identifier to mapping list cache item
-            cacheService.Remove(cacheKey);
+            Remove(cacheKey);
 
-            return cacheService.Remove(mdmIdentifier.ToString(CultureInfo.InvariantCulture));
+            //clear cached entity
+            return Remove(mdmIdentifier.ToString(CultureInfo.InvariantCulture));
         }
 
         /// <summary>
@@ -110,8 +113,9 @@ namespace EnergyTrading.Mdm.Client.Services
             {
                 return;
             }
+
+            Add(entity.ToMdmKey().ToString(CultureInfo.InvariantCulture), entity, policy);
             AddMappingsToCache(entity, policy);
-            cacheService.Add(entity.ToMdmKey().ToString(CultureInfo.InvariantCulture), entity, policy);
         }
 
         /// <summary>
@@ -122,12 +126,12 @@ namespace EnergyTrading.Mdm.Client.Services
         /// <param name="policy"></param>
         public void Add(MdmId mdmId, int identifier, CacheItemPolicy policy = null)
         {
-            if (mdmId == null)
+            if (mdmId == null || (string.IsNullOrWhiteSpace(mdmId.SystemName) || string.IsNullOrWhiteSpace(mdmId.Identifier)))
             {
                 return;
             }
 
-            cacheService.Add(CreateCacheKeyFromMdmId(mdmId), new int?(identifier));
+            Add(CreateCacheKeyFromMdmId(mdmId), new int?(identifier));
         }
 
         private void AddMappingsToCache<TContract>(TContract entity, CacheItemPolicy policy) where TContract : class,IMdmEntity
@@ -140,17 +144,7 @@ namespace EnergyTrading.Mdm.Client.Services
                 Add(mdmId, identifier, policy);
             }
 
-            cacheService.Add(CreateCacheKeyFromIdentifierForMappings(entity.ToMdmKey()), entity.Identifiers, policy);
-        }
-
-        private static string CreateCacheKeyFromMdmId(MdmId mdmId)
-        {
-            return string.Format("Mapping_{0}_{1}", mdmId.SystemName, mdmId.Identifier);
-        }
-
-        private static string CreateCacheKeyFromIdentifierForMappings(int identifier)
-        {
-            return string.Format("Entity_Mappings_{0}", identifier);
+            Add(CreateCacheKeyFromIdentifierForMappings(entity.ToMdmKey()), entity.Identifiers, policy);
         }
 
         /// <summary>
@@ -189,6 +183,17 @@ namespace EnergyTrading.Mdm.Client.Services
         public T Get<T>(string key)
         {
             return string.IsNullOrWhiteSpace(key) ? default (T) : cacheService.Get<T>(key);
+        }
+
+
+        private static string CreateCacheKeyFromMdmId(MdmId mdmId)
+        {
+            return string.Format("Mapping_{0}_{1}", mdmId.SystemName, mdmId.Identifier);
+        }
+
+        private static string CreateCacheKeyFromIdentifierForMappings(int identifier)
+        {
+            return string.Format("Entity_Mappings_{0}", identifier);
         }
     }
 }
