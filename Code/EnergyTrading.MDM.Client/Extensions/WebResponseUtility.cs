@@ -6,6 +6,7 @@
     using System.Net;
     using System.Reflection;
     using System.Threading;
+    using System.Web.Script.Serialization;
 
     using EnergyTrading.Logging;
     using EnergyTrading.Mdm.Client.WebClient;
@@ -14,7 +15,24 @@
     public static class WebResponseUtility
     {
         private static readonly ILogger Logger = LoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        
+
+        public static void LogResponse<T>(this WebResponse<T> response)
+        {
+            var serializer = new JavaScriptSerializer();
+
+            if (response.IsValid)
+            {
+                if (Logger.IsDebugEnabled)
+                {
+                    Logger.Debug(serializer.Serialize(response));
+                }
+            }
+            else
+            {
+                Logger.Error(serializer.Serialize(response));
+            }
+        }
+
         /// <summary>
         /// Get back a list of values from the response.
         /// </summary>

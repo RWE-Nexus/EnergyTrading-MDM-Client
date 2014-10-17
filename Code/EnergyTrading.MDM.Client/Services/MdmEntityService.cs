@@ -2,13 +2,12 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
     using System.Linq;
     using System.Net;
     using System.Web;
-
     using EnergyTrading.Contracts.Search;
     using EnergyTrading.Logging;
+    using EnergyTrading.Mdm.Client.Extensions;
     using EnergyTrading.Mdm.Client.WebClient;
     using EnergyTrading.Mdm.Contracts;
 
@@ -85,7 +84,11 @@
                 Logger.DebugFormat("GetList<{0}>: {1} - {2}", typeof(TContract).Name, id);
             }
 
-            return this.requester.Request<IList<TContract>>(string.Format(this.entityListUri, id));
+            var response = this.requester.Request<IList<TContract>>(string.Format(this.entityListUri, id));
+
+            response.LogResponse();
+
+            return response;
         }
 
         public WebResponse<TContract> Get(int id, DateTime? validAt)
@@ -141,25 +144,30 @@
                 var nexusId = response.Message.Identifiers.FirstOrDefault(mapping => query(mapping));
                 if (nexusId != null)
                 {
-                    return new WebResponse<MdmId>
+                    var r2 = new WebResponse<MdmId>
                     {
                         Code = HttpStatusCode.OK,
                         Message = nexusId
                     };
+
+                    r2.LogResponse();
+                    return r2;
                 }
 
                 // TODO: Add fault for "No mapping to system x"
                 response.Code = HttpStatusCode.NotFound;
             }
 
-            LogResponse(id, response, null, "GetMapping");
-
-            return new WebResponse<MdmId>
+            var webResponse = new WebResponse<MdmId>
             {
                 Code = response.Code,
                 IsValid = false,
                 Fault = response.Fault
             };
+
+            webResponse.LogResponse();
+
+            return webResponse;
         }
 
         public void Invalidate(int id)
@@ -180,18 +188,7 @@
                 throw new ArgumentNullException("identifier");
             }
 
-            var response = this.CrossMap(identifier.SystemName, identifier.Identifier, targetSystem);
-
-            if (!response.IsValid)
-            {
-                LogResponse(response,
-                    response.Code == HttpStatusCode.NotFound
-                        ? "CrossMap<{0}> - Could not find mapping for {1} - {2}"
-                        : "CrossMap<{0}> - {1} - {2}", typeof (TContract).Name,
-                    identifier.SystemName, identifier.Identifier);
-            }
-
-            return response;
+            return this.CrossMap(identifier.SystemName, identifier.Identifier, targetSystem);
         }
 
         public WebResponse<MappingResponse> CrossMap(string sourceSystem, string identifier, string targetSystem)
@@ -203,14 +200,7 @@
 
             var response = this.requester.Request<MappingResponse>(string.Format(this.crossMapUri, sourceSystem, identifier, targetSystem));
 
-            if (!response.IsValid)
-            {
-                LogResponse(response,
-                    response.Code == HttpStatusCode.NotFound
-                        ? "CrossMap<{0}> - Could not find mapping for {1} - {2}"
-                        : "CrossMap<{0}> - {1} - {2}", typeof (TContract).Name,
-                    sourceSystem, identifier);
-            }
+            response.LogResponse();
 
             return response;
         }
@@ -226,7 +216,12 @@
             {
                 Logger.DebugFormat("Search<{0}>", typeof(TContract).Name);
             }
-            return this.requester.Search<TContract>(this.searchUri, search);
+
+            var response = this.requester.Search<TContract>(this.searchUri, search);
+
+            response.LogResponse();
+
+            return response;
         }
 
         public WebResponse<TContract> Update(int id, TContract contract)
@@ -236,11 +231,11 @@
 
         public WebResponse<TContract> Update(int id, TContract contract, string etag)
         {
-            return Update(id,contract,etag,null);
+            return Update(id, contract, etag, null);
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="contract"></param>
         /// <param name="requestInfo"></param>
@@ -258,17 +253,9 @@
             {
                 this.ProcessContract(response);
             }
-            else
-            {
-                if (contract.Identifiers != null && contract.Identifiers.Any())
-                {
-                    LogResponse(response, "Create<{0}> - {1}", typeof(TContract).Name, contract.Identifiers.First().Identifier);
-                }
-                else
-                {
-                    LogResponse(response, "Create<{0}>", typeof(TContract).Name);
-                }
-            }
+
+            response.LogResponse();
+
             return response;
         }
 
@@ -288,23 +275,28 @@
 
             var uri = string.Format(this.mappingUri, id);
             var response = this.Create<MdmId, MappingResponse>(uri, mapping, requestInfo);
-            if (response.IsValid)
+
+            var webResponse = new WebResponse<MdmId>
             {
-                return new WebResponse<MdmId>
+                Code = HttpStatusCode.OK,
+                Message = response.Message.Mappings[0],
+                RequestId = response.RequestId
+            };
+
+            if (!response.IsValid)
+            {
+                webResponse = new WebResponse<MdmId>
                 {
-                    Code = HttpStatusCode.OK,
-                    Message = response.Message.Mappings[0],
+                    IsValid = false,
+                    Code = response.Code,
+                    Fault = response.Fault,
                     RequestId = response.RequestId
                 };
             }
 
-            return new WebResponse<MdmId>
-            {
-                IsValid = false,
-                Code = response.Code,
-                Fault = response.Fault,
-                RequestId = response.RequestId
-            };
+            webResponse.LogResponse();
+
+            return webResponse;
         }
 
         public WebResponse<TContract> DeleteMapping(int entityId, int mappingId, MdmRequestInfo requestInfo)
@@ -320,23 +312,27 @@
 
             if (response.IsValid)
             {
-                return new WebResponse<TContract>
+                response = new WebResponse<TContract>
                 {
                     Code = HttpStatusCode.OK,
                     IsValid = true,
                     RequestId = response.RequestId
                 };
             }
-
-            LogResponse(mappingId, response, null, "DeleteMapping");
-
-            return new WebResponse<TContract>
+            else
             {
-                Code = response.Code,
-                IsValid = false,
-                Fault = response.Fault,
-                RequestId = response.RequestId
-            };
+                response = new WebResponse<TContract>
+                {
+                    Code = response.Code,
+                    IsValid = false,
+                    Fault = response.Fault,
+                    RequestId = response.RequestId
+                };
+            }
+
+            response.LogResponse();
+
+            return response;
         }
 
         public WebResponse<TContract> Update(int id, TContract contract, MdmRequestInfo requestInfo)
@@ -353,9 +349,10 @@
 
             var response = this.requester.Update(string.Format(this.entityUri, id), etag, contract, requestInfo);
 
+            response.LogResponse();
+
             if (!response.IsValid)
             {
-                LogResponse(id, response, null, "Update");
                 return response;
             }
 
@@ -375,6 +372,8 @@
                 this.ProcessContract(r2);
             }
 
+            r2.LogResponse();
+
             return r2;
         }
 
@@ -388,7 +387,7 @@
 
             var response = this.GetContract(uri);
 
-            LogResponse(id, response, validAt, null);
+            response.LogResponse();
 
             return response;
         }
@@ -403,25 +402,28 @@
 
             var response = this.GetContract(uri);
 
-            LogResponse(sourceIdentifier.Identifier, response, validAt, null);
+            response.LogResponse();
 
             return response;
         }
 
         private WebResponse<TMessage> Create<TMessage>(string uri, TMessage message, MdmRequestInfo requestInfo) where TMessage : class
         {
-            return this.Create<TMessage, TMessage>(uri, message,requestInfo);
+            return this.Create<TMessage, TMessage>(uri, message, requestInfo);
         }
 
         private WebResponse<TResponse> Create<TMessage, TResponse>(string uri, TMessage message, MdmRequestInfo requestInfo) where TResponse : class
         {
             var request = this.requester.Create(uri, message, requestInfo);
-            var response = new WebResponse<TResponse> {Code = request.Code, IsValid = false, RequestId = request.RequestId, Fault = request.Fault};
-            
-            if (!request.IsValid) return response;
+            var response = new WebResponse<TResponse> { Code = request.Code, IsValid = false, RequestId = request.RequestId, Fault = request.Fault };
 
-            response = this.requester.Request<TResponse>(request.Location);
-            response.RequestId = request.RequestId;
+            if (request.IsValid)
+            {
+                response = this.requester.Request<TResponse>(request.Location);
+                response.RequestId = request.RequestId;
+            }
+
+            response.LogResponse();
 
             return response;
         }
@@ -455,35 +457,6 @@
         private static string UrlEncode(string value)
         {
             return HttpUtility.UrlEncode(value);
-        }
-
-        private static void LogResponse<T>(WebResponse<T> response, string format, params object[] parameters)
-        {
-            const string MessageFormat = "{0} {1}";
-
-            if (response.IsValid)
-            {
-                return;
-            }
-
-            if (response.Fault == null)
-            {
-                Logger.InfoFormat(MessageFormat, string.Format(format, parameters), response.Code);
-            }
-            else
-            {
-                Logger.InfoFormat(MessageFormat, string.Format(format, parameters), response.Fault.Message);
-            }
-        }
-
-        private static void LogResponse(string id, WebResponse<TContract> response, DateTime? validAt, string verb = "GET")
-        {
-            LogResponse(response, "{0}<{1}> - Id {2} {3}", verb, typeof(TContract).Name, id, validAt);
-        }
-
-        private static void LogResponse(int id, WebResponse<TContract> response, DateTime? validAt, string verb = "GET")
-        {
-            LogResponse(id.ToString(CultureInfo.InvariantCulture), response, validAt, verb);
         }
     }
 }
