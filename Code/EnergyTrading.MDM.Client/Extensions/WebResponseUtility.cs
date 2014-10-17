@@ -24,12 +24,12 @@
             {
                 if (Logger.IsDebugEnabled)
                 {
-                    Logger.Debug(serializer.Serialize(response));
+                    Logger.DebugFormat("Response Received - \n{0}",serializer.Serialize(response));
                 }
             }
             else
             {
-                Logger.Error(serializer.Serialize(response));
+                Logger.ErrorFormat("Response Received - \n{0}",serializer.Serialize(response));
             }
         }
 
