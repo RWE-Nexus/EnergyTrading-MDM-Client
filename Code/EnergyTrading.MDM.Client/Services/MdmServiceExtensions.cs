@@ -78,6 +78,7 @@ namespace EnergyTrading.Mdm.Client.Services
                 logger.Error("Service Call to MDM Service has failed with the error: " + fault.Message);
             }
 
+            response.LogResponse();
             return response;
         }
 
@@ -133,6 +134,7 @@ namespace EnergyTrading.Mdm.Client.Services
                 log("Service Call to MDM Service has failed with the error: " + fault.Message);
             }
 
+            response.LogResponse();
             return response;  
         }
 
@@ -148,7 +150,9 @@ namespace EnergyTrading.Mdm.Client.Services
         /// <returns>Result of the MDM action</returns>        
         public static WebResponse<T> TrySearch<T>(this IMdmService service, ILogger logger, Func<WebResponse<T>> func, int retries = 5, int sleep = 100)
         {
-            return service.TrySearch(func, logger, retries, sleep);
+            var response = service.TrySearch(func, logger, retries, sleep);
+            response.LogResponse();
+            return response;
         }
 
         /// <summary>
@@ -202,7 +206,7 @@ namespace EnergyTrading.Mdm.Client.Services
             {
                 logger.Error("Service Call to MDM Service has failed with the error: " + fault.Message);
             }
-
+            response.LogResponse();
             return response;
         }
 
@@ -259,6 +263,7 @@ namespace EnergyTrading.Mdm.Client.Services
                 log("Service Call to MDM Service has failed with the error: " + fault.Message);
             }
 
+            response.LogResponse();
             return response;
         }
 

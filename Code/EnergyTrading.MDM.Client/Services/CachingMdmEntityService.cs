@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Net;
-
+    using EnergyTrading.Mdm.Client.Extensions;
     using EnergyTrading.Contracts.Search;
     using EnergyTrading.Logging;
     using EnergyTrading.Mdm.Client.WebClient;
@@ -99,7 +99,9 @@
                 TContract entity;
                 if (this.entities.TryGetValue(id, out entity))
                 {
-                    return new WebResponse<TContract> { Message = entity };
+                    var response = new WebResponse<TContract> { Message = entity };
+                    response.LogResponse();
+                    return response;
                 }
 
                 return this.AcquireEntity(id, () => this.service.Get(id, validAt));
@@ -122,9 +124,13 @@
             {
                 Logger.DebugFormat("Start: {0} asOf {1}", identifier, validAt);
                 int entityId;
-                return this.mappings.TryGetValue(identifier, out entityId) 
+                var response = this.mappings.TryGetValue(identifier, out entityId) 
                     ? new WebResponse<TContract> { Code = HttpStatusCode.OK, Message = this.entities[entityId] } 
                     : this.AcquireEntity(identifier, () => this.service.Get(identifier, validAt));
+
+                response.LogResponse();
+
+                return response;
             }
             finally
             {
@@ -323,11 +329,15 @@
                 TContract entity;
                 if (this.entities.TryGetValue(id, out entity))
                 {
-                    return new WebResponse<TContract>
+                    response = new WebResponse<TContract>
                     {
                         Code = HttpStatusCode.OK,
                         Message = entity
                     };
+
+                    response.LogResponse();
+
+                    return response;
                 }
 
                 response = finder.Invoke();
@@ -353,11 +363,15 @@
                 if (this.mappings.TryGetValue(sourceIdentifier, out entityId))
                 {
                     // Can do this as we are in a locked section
-                    return new WebResponse<TContract>
+                    response = new WebResponse<TContract>
                     {
                         Code = HttpStatusCode.OK,
                         Message = this.entities[entityId]
                     };
+
+                    response.LogResponse();
+
+                    return response;
                 }
 
                 response = finder.Invoke();

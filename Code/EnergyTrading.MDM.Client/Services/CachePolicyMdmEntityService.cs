@@ -1,22 +1,17 @@
-﻿using System.Diagnostics.Contracts;
-using EnergyTrading.Mdm.Client.Extensions;
-
-namespace EnergyTrading.Mdm.Client.Services
+﻿namespace EnergyTrading.Mdm.Client.Services
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
     using System.Linq;
     using System.Net;
     using System.Runtime.Caching;
-
     using EnergyTrading.Caching;
     using EnergyTrading.Contracts.Search;
     using EnergyTrading.Logging;
+    using EnergyTrading.Mdm.Client.Extensions;
     using EnergyTrading.Mdm.Client.WebClient;
     using EnergyTrading.Mdm.Contracts;
     using EnergyTrading.Search;
-    using EnergyTrading.Xml.Serialization;
 
     /// <summary>
     /// Caching <see cref="IMdmEntityService{T}"/> that uses <see cref="CacheItemPolicy"/> to control behaviour
@@ -112,13 +107,20 @@ namespace EnergyTrading.Mdm.Client.Services
             {
                 Logger.DebugFormat("Start: Get<{0}>: {1} asOf {2}", this.entityName, id, validAt);
                 var entity = this.CheckCache(id);
+                WebResponse<TContract> response;
+
                 if (entity != null)
                 {
-                    return new WebResponse<TContract> { Message = entity, Code = HttpStatusCode.OK, IsValid = true };
+                    response = new WebResponse<TContract> { Message = entity, Code = HttpStatusCode.OK, IsValid = true };
+                    response.LogResponse();
+                }
+                else
+                {
+                    response = this.AcquireEntity(id, () => this.service.Get(id, validAt));
                 }
 
-                return this.AcquireEntity(id, () => this.service.Get(id, validAt));
-            }
+                return response;
+             }
             finally
             {
                 Logger.DebugFormat("Stop: Get<{0}>: {1} asOf {2}", this.entityName, id, validAt);
@@ -160,7 +162,9 @@ namespace EnergyTrading.Mdm.Client.Services
                 var entity= cache.Get<TContract>(identifier);
                 if (entity != null)
                 {
-                    return new WebResponse<TContract> { Code = HttpStatusCode.OK, Message = entity, IsValid = true };
+                    var response =  new WebResponse<TContract> { Code = HttpStatusCode.OK, Message = entity, IsValid = true };
+                    response.LogResponse();
+                    return response;
                 }
 
                 return this.AcquireEntity(identifier, () => this.service.Get(identifier, validAt));
@@ -193,22 +197,29 @@ namespace EnergyTrading.Mdm.Client.Services
         public WebResponse<MdmId> GetMapping(int id, Predicate<MdmId> query)
         {
             var response = this.Get(id);
+            WebResponse<MdmId> webResponse;
             if (response.IsValid)
             {
-                return new WebResponse<MdmId>
+                webResponse = new WebResponse<MdmId>
                 {
                     Code = HttpStatusCode.OK,
                     Message = response.Message.Identifiers.FirstOrDefault(mapping => query(mapping)),
                     IsValid = true
                 };
             }
-
-            return new WebResponse<MdmId>
+            else
             {
-                Code = response.Code,
-                Fault = response.Fault,
-                IsValid = false
-            };
+                webResponse =  new WebResponse<MdmId>
+                {
+                    Code = response.Code,
+                    Fault = response.Fault,
+                    IsValid = false
+                };
+            }
+
+            webResponse.LogResponse();
+
+            return webResponse;
         }
 
         /// <copydocfrom cref="IMdmEntityService{T}.Invalidate" />
@@ -288,6 +299,12 @@ namespace EnergyTrading.Mdm.Client.Services
                         this.searchCache.Add(key, result, this.cacheItemPolicyFactory.CreatePolicy());
                     }
                 }
+            }
+            else
+            {
+                // When result is null - then service will be called - which logs the response. 
+                // As search results in a List - checking to avoid logging duplicate response
+                result.LogResponse();
             }
 
             return result;
@@ -387,12 +404,16 @@ namespace EnergyTrading.Mdm.Client.Services
                 var entity = this.CheckCache(id);
                 if (entity != null)
                 {
-                    return new WebResponse<TContract>
+                    response =  new WebResponse<TContract>
                     {
                         Code = HttpStatusCode.OK,
                         Message = entity,
                         IsValid = true
                     };
+
+                    response.LogResponse();
+
+                    return response;
                 }
 
                 // Otherwise process the response from the web call
@@ -402,6 +423,7 @@ namespace EnergyTrading.Mdm.Client.Services
                 }
             }
 
+            response.LogResponse();
             return response;
         }
 
@@ -417,7 +439,9 @@ namespace EnergyTrading.Mdm.Client.Services
                 var entity = cache.Get<TContract>(sourceIdentifier);
                 if (entity != null)
                 {
-                    return new WebResponse<TContract> { Code = HttpStatusCode.OK, Message = entity, IsValid = true };
+                    var webResponse =  new WebResponse<TContract> { Code = HttpStatusCode.OK, Message = entity, IsValid = true };
+                    webResponse.LogResponse();
+                    return webResponse;
                 }
 
                 // Otherwise process the response from the web call
@@ -426,7 +450,7 @@ namespace EnergyTrading.Mdm.Client.Services
                     this.ProcessContract(response);
                 }
             }
-
+            response.LogResponse();
             return response;
         }
 

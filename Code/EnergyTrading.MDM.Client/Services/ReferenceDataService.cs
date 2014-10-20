@@ -4,6 +4,7 @@
 
     using EnergyTrading.Mdm.Client.WebClient;
     using EnergyTrading.Mdm.Contracts;
+    using EnergyTrading.Mdm.Client.Extensions;
 
     public class ReferenceDataService : IReferenceDataService
     {
@@ -19,19 +20,25 @@
         public WebResponse<ReferenceDataList> List(string key)
         {
             var uri = string.Format("{0}/list/{1}", this.baseUri, key);
-            return this.requester.Request<ReferenceDataList>(uri);
+            var response = this.requester.Request<ReferenceDataList>(uri);
+            response.LogResponse();
+            return response;
         }
 
         public WebResponse<IList<ReferenceData>> Create(string key, IList<ReferenceData> entries)
         {
             var uri = string.Format("{0}/create/{1}", this.baseUri, key);
-            return this.requester.Create(uri, entries);
+            var response = this.requester.Create(uri, entries);
+            response.LogResponse();
+            return response;
         }
 
         public WebResponse<IList<ReferenceData>> Delete(string key, IList<ReferenceData> entries)
         {
             var uri = string.Format("{0}/delete/{1}", this.baseUri, key);
-            return this.requester.Delete<IList<ReferenceData>>(uri);
+            var response= this.requester.Delete<IList<ReferenceData>>(uri);
+            response.LogResponse();
+            return response;
         }
 
         //public PagedWebResponse<IList<ReferenceData>> Search(Search search)
