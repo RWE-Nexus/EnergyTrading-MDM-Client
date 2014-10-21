@@ -5,5 +5,5 @@
 // associated with an assembly.
 [assembly: AssemblyTitle("EnergyTrading.MDM.Client.WebApi")]
 [assembly: AssemblyDescription("")]
-[assembly: AssemblyVersion("110")]
-[assembly: AssemblyFileVersion("110")]
+[assembly: AssemblyVersion("113")]
+[assembly: AssemblyFileVersion("113")]
