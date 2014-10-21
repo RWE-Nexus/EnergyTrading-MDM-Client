@@ -36,7 +36,7 @@
         /// </summary>
         /// <param name="service"></param>
         /// <param name="cacheItemPolicyFactory"></param>
-        public CachePolicyMdmEntityService(IMdmEntityService<TContract> service, ICacheItemPolicyFactory cacheItemPolicyFactory,IMdmClientCacheRepository mdmCacheRepository, uint version = 0)
+        public CachePolicyMdmEntityService(IMdmEntityService<TContract> service, ICacheItemPolicyFactory cacheItemPolicyFactory, IMdmClientCacheRepository mdmCacheRepository, uint version = 0)
         {
             this.service = service;
             this.cacheName = typeof(TContract).GetCacheNameFromEntityType(version);
@@ -67,6 +67,7 @@
         /// </summary>
         public void Clear()
         {
+            Logger.Debug("CachePolicyMdmEntityService.Clear : Clearing Cache...");
             if (cacheRepository != null && !string.IsNullOrEmpty(cacheName))
             {
                 cacheRepository.RemoveNamedCache(cacheName);
@@ -86,7 +87,7 @@
             {
                 if (Logger.IsDebugEnabled)
                 {
-                    Logger.DebugFormat("Start GetList<{0}>: {1} - {2}", typeof(TContract).Name, id);
+                    Logger.DebugFormat("Start CachePolicyMdmEntityService.GetList<{0}>: {1} - {2}", this.entityName, id);
                 }
 
                 return this.service.GetList(id);
@@ -95,8 +96,8 @@
             {
                 if (Logger.IsDebugEnabled)
                 {
-                    Logger.DebugFormat("Stop GetList<{0}>: {1} - {2}", typeof(TContract).Name, id);
-                }                
+                    Logger.DebugFormat("Stop CachePolicyMdmEntityService.GetList<{0}>: {1} - {2}", this.entityName, id);
+                }
             }
         }
 
@@ -105,7 +106,7 @@
         {
             try
             {
-                Logger.DebugFormat("Start: Get<{0}>: {1} asOf {2}", this.entityName, id, validAt);
+                Logger.DebugFormat("Start: CachePolicyMdmEntityService.Get<{0}>: {1} asOf {2}", this.entityName, id, validAt);
                 var entity = this.CheckCache(id);
                 WebResponse<TContract> response;
 
@@ -116,14 +117,15 @@
                 }
                 else
                 {
+                    Logger.DebugFormat("CachePolicyMdmEntityService.Get : {0} - {1} not found in cache. Calling AcquireEntity...", this.entityName, id);
                     response = this.AcquireEntity(id, () => this.service.Get(id, validAt));
                 }
 
                 return response;
-             }
+            }
             finally
             {
-                Logger.DebugFormat("Stop: Get<{0}>: {1} asOf {2}", this.entityName, id, validAt);
+                Logger.DebugFormat("Stop: CachePolicyMdmEntityService.Get<{0}>: {1} asOf {2}", this.entityName, id, validAt);
             }
         }
 
@@ -139,7 +141,7 @@
         {
             try
             {
-                Logger.DebugFormat("Start: Get<{0}>: {1} asOf {2}", this.entityName, identifier, validAt);
+                Logger.DebugFormat("Start: CachePolicyMdmEntityService.Get<{0}>: {1} asOf {2}", this.entityName, identifier, validAt);
 
                 if (identifier == null)
                 {
@@ -159,19 +161,21 @@
                     }
                 }
 
-                var entity= cache.Get<TContract>(identifier);
+                Logger.DebugFormat("CachePolicyMdmEntityService.Get : Get<{0}> - {1} from cache", this.entityName, identifier);
+                var entity = cache.Get<TContract>(identifier);
                 if (entity != null)
                 {
-                    var response =  new WebResponse<TContract> { Code = HttpStatusCode.OK, Message = entity, IsValid = true };
+                    var response = new WebResponse<TContract> { Code = HttpStatusCode.OK, Message = entity, IsValid = true };
                     response.LogResponse();
                     return response;
                 }
 
+                Logger.DebugFormat("CachePolicyMdmEntityService.Get : {0} not found in cache. Invoking AcquireEntity...", identifier);
                 return this.AcquireEntity(identifier, () => this.service.Get(identifier, validAt));
             }
             finally
             {
-                Logger.DebugFormat("Stop: Get<{0}>: {1} asOf {2}", this.entityName, identifier, validAt);
+                Logger.DebugFormat("Stop: CachePolicyMdmEntityService.Get<{0}>: {1} asOf {2}", this.entityName, identifier, validAt);
             }
         }
 
@@ -196,30 +200,39 @@
         /// <copydocfrom cref="IMdmEntityService{T}.GetMapping(int, Predicate{MdmId})" />
         public WebResponse<MdmId> GetMapping(int id, Predicate<MdmId> query)
         {
-            var response = this.Get(id);
-            WebResponse<MdmId> webResponse;
-            if (response.IsValid)
+            try
             {
-                webResponse = new WebResponse<MdmId>
+                Logger.DebugFormat("Start : CachePolicyMdmEntityService.GetMapping<{0}> - {1}", this.entityName, id);
+                var response = this.Get(id);
+                WebResponse<MdmId> webResponse;
+                if (response.IsValid)
                 {
-                    Code = HttpStatusCode.OK,
-                    Message = response.Message.Identifiers.FirstOrDefault(mapping => query(mapping)),
-                    IsValid = true
-                };
+                    Logger.DebugFormat("CachePolicyMdmEntityService.GetMapping - Valid response received. Populating Message based on the query parameter passed");
+                    webResponse = new WebResponse<MdmId>
+                    {
+                        Code = HttpStatusCode.OK,
+                        Message = response.Message.Identifiers.FirstOrDefault(mapping => query(mapping)),
+                        IsValid = true
+                    };
+                }
+                else
+                {
+                    webResponse = new WebResponse<MdmId>
+                    {
+                        Code = response.Code,
+                        Fault = response.Fault,
+                        IsValid = false
+                    };
+                }
+
+                webResponse.LogResponse();
+
+                return webResponse;
             }
-            else
+            finally
             {
-                webResponse =  new WebResponse<MdmId>
-                {
-                    Code = response.Code,
-                    Fault = response.Fault,
-                    IsValid = false
-                };
+                Logger.DebugFormat("Stop : CachePolicyMdmEntityService.GetMapping<{0}> - {1}", this.entityName, id);
             }
-
-            webResponse.LogResponse();
-
-            return webResponse;
         }
 
         /// <copydocfrom cref="IMdmEntityService{T}.Invalidate" />
@@ -227,6 +240,7 @@
         {
             // We could not bother locking if the id is not in the cache, but if it is present
             // we have to acquire it anyway, so take the hit - and quit quickly if we fail to match.
+            Logger.DebugFormat("Start : CachePolicyMdmEntityService.Invalidate<{0}> - {1}", this.entityName, id);
             lock (this.syncLock)
             {
                 var entity = this.CheckCache(id);
@@ -236,14 +250,22 @@
                 }
 
                 cache.Remove(id);
-
             }
+            Logger.DebugFormat("Stop : CachePolicyMdmEntityService.Invalidate<{0}> - {1}", this.entityName, id);
         }
 
         /// <copydocfrom cref="IMdmEntityService{T}.Map(int, string)" />
         public WebResponse<MdmId> Map(int id, string targetSystem)
         {
-            return this.GetMapping(id, ident => string.Equals(ident.SystemName, targetSystem, StringComparison.InvariantCultureIgnoreCase));
+            try
+            {
+                Logger.DebugFormat("Start : CachePolicyMdmEntityService.Map<{0}> - {1} - Target System - {2}", this.entityName, id, targetSystem);
+                return this.GetMapping(id, ident => string.Equals(ident.SystemName, targetSystem, StringComparison.InvariantCultureIgnoreCase));
+            }
+            finally
+            {
+                Logger.DebugFormat("Stop : CachePolicyMdmEntityService.Map<{0}> - {1} - Target System - {2}", this.entityName, id, targetSystem);
+            }
         }
 
         /// <copydocfrom cref="IMdmEntityService{T}.CrossMap(MdmId, string)" />
@@ -262,12 +284,12 @@
         {
             try
             {
-                Logger.DebugFormat("Start: CrossMap<{0}>: {1} - {2} - {3}", this.entityName, sourceSystem, identifier, targetSystem);
+                Logger.DebugFormat("Start: CachePolicyMdmEntityService.CrossMap<{0}>: {1} - {2} - {3}", this.entityName, sourceSystem, identifier, targetSystem);
                 return this.service.CrossMap(sourceSystem, identifier, targetSystem);
             }
             finally
             {
-                Logger.DebugFormat("Stop: CrossMap<{0}>: {1} - {2} - {3}", this.entityName, sourceSystem, identifier, targetSystem);
+                Logger.DebugFormat("Stop: CachePolicyMdmEntityService.CrossMap<{0}>: {1} - {2} - {3}", this.entityName, sourceSystem, identifier, targetSystem);
             }
         }
 
@@ -275,6 +297,7 @@
         public PagedWebResponse<IList<TContract>> Search(Search search)
         {
             var key = this.ToSearchKey(search);
+            Logger.DebugFormat("Start: CachePolicyMdmEntityService.Search<{0}>", key);
             Logger.DebugFormat("Searching for key: {0} within the cache", key);
             var result = this.CheckSearchCache(key);
             if (result == null)
@@ -326,7 +349,8 @@
         {
             try
             {
-                Logger.DebugFormat("Start: Create<{0}>", this.entityName);
+                Logger.DebugFormat("Start: CachePolicyMdmEntityService.Create<{0}>", this.entityName);
+                Logger.DebugFormat("CachePolicyMdmEntityService.Create<{0}> : Calling Service to create the entity", this.entityName);
                 var response = this.service.Create(contract, requestInfo);
                 if (response.IsValid)
                 {
@@ -337,7 +361,7 @@
             }
             finally
             {
-                Logger.DebugFormat("Stop: Create<{0}>", this.entityName);
+                Logger.DebugFormat("Stop: CachePolicyMdmEntityService.Create<{0}>", this.entityName);
             }
         }
 
@@ -345,12 +369,12 @@
         {
             try
             {
-                Logger.DebugFormat("Start: CreateMapping<{0}>: {1}", this.entityName, identifier);
+                Logger.DebugFormat("Start:  CachePolicyMdmEntityService.CreateMapping<{0}>: {1}. Calling service to create mapping", this.entityName, identifier);
                 return this.service.CreateMapping(id, identifier, requestInfo);
             }
             finally
             {
-                Logger.DebugFormat("Stop: CreateMapping<{0}>: {1}", this.entityName, identifier);
+                Logger.DebugFormat("Stop: CachePolicyMdmEntityService.CreateMapping<{0}>: {1}", this.entityName, identifier);
             }
         }
 
@@ -358,12 +382,12 @@
         {
             try
             {
-                Logger.DebugFormat("Start: DeleteMapping<{0}>: {1} - {2}", this.entityName, entityId, mappingId);
+                Logger.DebugFormat("Start: CachePolicyMdmEntityService.DeleteMapping<{0}>: {1} - {2}. Calling service to delete mapping", this.entityName, entityId, mappingId);
                 return this.service.DeleteMapping(entityId, mappingId, requestInfo);
             }
             finally
             {
-                Logger.DebugFormat("Stop: DeleteMapping<{0}>: {1} - {2}", this.entityName, entityId, mappingId);
+                Logger.DebugFormat("Stop: CachePolicyMdmEntityService.DeleteMapping<{0}>: {1} - {2}", this.entityName, entityId, mappingId);
             }
         }
 
@@ -376,8 +400,8 @@
         {
             try
             {
-                Logger.DebugFormat("Start: Update<{0}> - {1}", this.entityName, id);
-                var response = this.service.Update(id, contract, etag,requestInfo);
+                Logger.DebugFormat("Start: CachePolicyMdmEntityService.Update<{0}> - {1}. Calling service to update", this.entityName, id);
+                var response = this.service.Update(id, contract, etag, requestInfo);
                 if (response.IsValid)
                 {
                     this.ProcessContract(response);
@@ -387,7 +411,7 @@
             }
             finally
             {
-                Logger.DebugFormat("Stop: Update<{0}> - {1}", this.entityName, id);
+                Logger.DebugFormat("Stop: CachePolicyMdmEntityService.Update<{0}> - {1}", this.entityName, id);
             }
         }
 
@@ -395,6 +419,8 @@
         {
             // Pretty sure we will have a cache miss if we get here, so do the OOP call outside the 
             // critical section
+
+            Logger.Debug("Start: CachePolicyMdmEntityService.AcquireEntity - Invoking finder");
             var response = finder.Invoke();
 
             // NB Single-threaded on requests, but can't avoid that somewhere
@@ -404,7 +430,7 @@
                 var entity = this.CheckCache(id);
                 if (entity != null)
                 {
-                    response =  new WebResponse<TContract>
+                    response = new WebResponse<TContract>
                     {
                         Code = HttpStatusCode.OK,
                         Message = entity,
@@ -416,6 +442,7 @@
                     return response;
                 }
 
+                Logger.Debug("CachePolicyMdmEntityService.AcquireEntity : Not found in cache. Processing response from the web call");
                 // Otherwise process the response from the web call
                 if (response.IsValid)
                 {
@@ -431,20 +458,24 @@
         {
             // Pretty sure we will have a cache miss if we get here, so do the OOP call outside the 
             // critical section
+            Logger.Debug("Start: CachePolicyMdmEntityService.AcquireEntity - Invoking finder");
             var response = finder.Invoke();
 
             // NB Single-threaded on requests, but can't avoid that somewhere 
             lock (this.syncLock)
             {
+                Logger.DebugFormat("CachePolicyMdmEntityService.AcquireEntity - checking cache for {0}", sourceIdentifier.Identifier);
+
                 var entity = cache.Get<TContract>(sourceIdentifier);
                 if (entity != null)
                 {
-                    var webResponse =  new WebResponse<TContract> { Code = HttpStatusCode.OK, Message = entity, IsValid = true };
+                    var webResponse = new WebResponse<TContract> { Code = HttpStatusCode.OK, Message = entity, IsValid = true };
                     webResponse.LogResponse();
                     return webResponse;
                 }
 
                 // Otherwise process the response from the web call
+                Logger.Debug("CachePolicyMdmEntityService.AcquireEntity : Not found in cache. Processing response from the web call");
                 if (response.IsValid)
                 {
                     this.ProcessContract(response);
@@ -456,12 +487,21 @@
 
         private TContract CheckCache(int id)
         {
+            Logger.DebugFormat("CachePolicyMdmEntityService.CheckCache<{0}> : {1} from cache", typeof(TContract).Name, id);
             return this.cache.Get<TContract>(id);
         }
 
         private PagedWebResponse<IList<TContract>> CheckSearchCache(string key)
         {
-            return this.searchCache.Get<PagedWebResponse<IList<TContract>>>(key);
+            try
+            {
+                Logger.DebugFormat("Start : CachePolicyMdmEntityService.CheckSearchCache<{0}> - {1}", this.entityName,key);
+                return this.searchCache.Get<PagedWebResponse<IList<TContract>>>(key);
+            }
+            finally
+            {
+                Logger.DebugFormat("Stop : CachePolicyMdmEntityService.CheckSearchCache<{0}> - {1}", this.entityName,key);
+            }
         }
 
         private string ToSearchKey(Search search)
@@ -469,17 +509,18 @@
             return "client" + search.ToKey<TContract>(contractVersion);
         }
 
-        private void ProcessContract(WebResponse<TContract> reponse)
+        private void ProcessContract(WebResponse<TContract> response)
         {
             try
             {
-                var entity = reponse.Message;
+                Logger.Debug("CachePolicyMdmEntityService.ProcessContract : Processing response");
+                var entity = response.Message;
                 var id = entity.ToMdmKey();
 
                 lock (this.syncLock)
                 {
                     this.cache.Add(entity, this.cacheItemPolicyFactory.CreatePolicy());
-                    this.etags[id] = reponse.Tag;
+                    this.etags[id] = response.Tag;
                 }
             }
             catch (Exception ex)

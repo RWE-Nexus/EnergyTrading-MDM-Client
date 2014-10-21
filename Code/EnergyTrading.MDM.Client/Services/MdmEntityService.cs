@@ -275,15 +275,18 @@
 
             var uri = string.Format(this.mappingUri, id);
             var response = this.Create<MdmId, MappingResponse>(uri, mapping, requestInfo);
+            WebResponse<MdmId> webResponse;
 
-            var webResponse = new WebResponse<MdmId>
+            if (response.IsValid)
             {
-                Code = HttpStatusCode.OK,
-                Message = response.Message.Mappings[0],
-                RequestId = response.RequestId
-            };
-
-            if (!response.IsValid)
+                webResponse = new WebResponse<MdmId>
+                {
+                    Code = HttpStatusCode.OK,
+                    Message = response.Message.Mappings[0],
+                    RequestId = response.RequestId
+                };
+            }
+            else
             {
                 webResponse = new WebResponse<MdmId>
                 {

@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Configuration;
 
 namespace EnergyTrading.Mdm.Client.Constants
 {
@@ -12,5 +10,8 @@ namespace EnergyTrading.Mdm.Client.Constants
     {
        public static readonly string MdmRequestHeaderName = "X-MDMREQ-HDR";
        public static readonly string MdmRequestSourceSystemName = "Mdm:SourceSystem";
+
+       public static readonly bool LogResponse =
+           Convert.ToBoolean(ConfigurationManager.AppSettings["LogResponse"] ?? "false");
     }
 }

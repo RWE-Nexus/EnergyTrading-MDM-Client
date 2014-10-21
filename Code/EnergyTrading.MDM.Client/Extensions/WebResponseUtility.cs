@@ -1,5 +1,9 @@
 ﻿namespace EnergyTrading.Mdm.Client.Extensions
 {
+    using EnergyTrading.Logging;
+    using EnergyTrading.Mdm.Client.Constants;
+    using EnergyTrading.Mdm.Client.WebClient;
+    using EnergyTrading.Mdm.Contracts;
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -8,28 +12,31 @@
     using System.Threading;
     using System.Web.Script.Serialization;
 
-    using EnergyTrading.Logging;
-    using EnergyTrading.Mdm.Client.WebClient;
-    using EnergyTrading.Mdm.Contracts;
-
     public static class WebResponseUtility
     {
         private static readonly ILogger Logger = LoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public static void LogResponse<T>(this WebResponse<T> response)
+        private static string GetSerializedResponse<T>(WebResponse<T> response)
         {
             var serializer = new JavaScriptSerializer();
 
-            if (response.IsValid)
+            if (response.Fault != null)
             {
-                if (Logger.IsDebugEnabled)
-                {
-                    Logger.DebugFormat("Response Received - \n{0}",serializer.Serialize(response));
-                }
+                return MdmConstants.LogResponse
+                    ? serializer.Serialize(new { response.Code, response.Fault })
+                    : serializer.Serialize(new { response.Code, response.Fault, response.Message });
             }
-            else
+
+            return MdmConstants.LogResponse
+                 ? serializer.Serialize(new { response.Code })
+                 : serializer.Serialize(new { response.Code, response.Message });
+        }
+
+        public static void LogResponse<T>(this WebResponse<T> response)
+        {
+            if (Logger.IsDebugEnabled)
             {
-                Logger.ErrorFormat("Response Received - \n{0}",serializer.Serialize(response));
+                Logger.DebugFormat("Response Received - \n{0}", GetSerializedResponse(response));
             }
         }
 
