@@ -1,14 +1,14 @@
 ﻿namespace EnergyTrading.Mdm.Client.Services
 {
+    using EnergyTrading.Contracts.Search;
+    using EnergyTrading.Logging;
+    using EnergyTrading.Mdm.Client.Extensions;
+    using EnergyTrading.Mdm.Client.WebClient;
+    using EnergyTrading.Mdm.Contracts;
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Net;
-    using EnergyTrading.Mdm.Client.Extensions;
-    using EnergyTrading.Contracts.Search;
-    using EnergyTrading.Logging;
-    using EnergyTrading.Mdm.Client.WebClient;
-    using EnergyTrading.Mdm.Contracts;
 
     /// <summary>
     /// Caching implementation of <see cref="IMdmEntityService{T}" />, allows us to control the cache at an entity level.
@@ -24,6 +24,7 @@
         private readonly Dictionary<int, string> etags;
         private readonly Dictionary<MdmId, int> mappings;
         private readonly object syncLock;
+        private readonly string entityName;
 
         public CachingMdmEntityService(IMdmEntityService<TContract> service)
         {
@@ -32,6 +33,7 @@
             this.entities = new Dictionary<int, TContract>();
             this.etags = new Dictionary<int, string>();
             this.syncLock = new object();
+            this.entityName = typeof(TContract).Name;
         }
 
         /// <summary>
@@ -55,14 +57,14 @@
         /// </summary>
         public void Clear()
         {
-            Logger.Debug("Start");
+            Logger.Debug("Start: CachingMdmEntityService.Clear : Clearing Cache");
             lock (this.syncLock)
             {
                 this.etags.Clear();
                 this.entities.Clear();
                 this.mappings.Clear();
             }
-            Logger.Debug("Stop");
+            Logger.Debug("Stop : CachingMdmEntityService.Clear");
         }
 
         public WebResponse<TContract> Get(int id)
@@ -77,7 +79,7 @@
             {
                 if (Logger.IsDebugEnabled)
                 {
-                    Logger.DebugFormat("Start GetList<{0}>: {1} - {2}", typeof(TContract).Name, id);
+                    Logger.DebugFormat("Start CachingMdmEntityService.GetList<{0}>: {1} - {2}", this.entityName, id);
                 }
 
                 return this.service.GetList(id);
@@ -86,7 +88,7 @@
             {
                 if (Logger.IsDebugEnabled)
                 {
-                    Logger.DebugFormat("Stop GetList<{0}>: {1} - {2}", typeof(TContract).Name, id);
+                    Logger.DebugFormat("Stop CachingMdmEntityService.GetList<{0}>: {1} - {2}", this.entityName, id);
                 }
             }
         }
@@ -95,20 +97,23 @@
         {
             try
             {
-                Logger.DebugFormat("Start: {0} asOf {1}", id, validAt);
+                Logger.DebugFormat("Start: CachingMdmEntityService.Get<{0}> {1} asOf {2}", this.entityName, id, validAt);
                 TContract entity;
+                Logger.DebugFormat("CachingMdmEntityService.Get : Checking {0} in cache", id);
                 if (this.entities.TryGetValue(id, out entity))
                 {
+                    Logger.DebugFormat("CachingMdmEntityService.Get : {0} found in cache", id);
                     var response = new WebResponse<TContract> { Message = entity };
                     response.LogResponse();
                     return response;
                 }
 
+                Logger.DebugFormat("CachingMdmEntityService.Get : {0} not found in cache. Invoking service...", id);
                 return this.AcquireEntity(id, () => this.service.Get(id, validAt));
             }
             finally
             {
-                Logger.DebugFormat("Stop: {0} asOf {1}", id, validAt);
+                Logger.DebugFormat("Stop: CachingMdmEntityService.Get : {0} asOf {1}", id, validAt);
             }
         }
 
@@ -122,11 +127,22 @@
         {
             try
             {
-                Logger.DebugFormat("Start: {0} asOf {1}", identifier, validAt);
+                Logger.DebugFormat("Start: CachingMdmEntityService.Get<{0}> {1} asOf {2}", this.entityName, identifier, validAt);
                 int entityId;
-                var response = this.mappings.TryGetValue(identifier, out entityId) 
-                    ? new WebResponse<TContract> { Code = HttpStatusCode.OK, Message = this.entities[entityId] } 
-                    : this.AcquireEntity(identifier, () => this.service.Get(identifier, validAt));
+                WebResponse<TContract> response;
+
+                Logger.DebugFormat("CachingMdmEntityService.Get - Checking {0} in cache", identifier);
+
+                if (this.mappings.TryGetValue(identifier, out entityId))
+                {
+                    Logger.DebugFormat("CachingMdmEntityService.Get - {0} found in cache", identifier);
+                    response = new WebResponse<TContract> { Code = HttpStatusCode.OK, Message = this.entities[entityId] };
+                }
+                else
+                {
+                    Logger.DebugFormat("CachingMdmEntityService.Get - {0} not found in cache. Invoking Service...", identifier);
+                    response = this.AcquireEntity(identifier, () => this.service.Get(identifier, validAt));
+                }
 
                 response.LogResponse();
 
@@ -134,7 +150,7 @@
             }
             finally
             {
-                Logger.DebugFormat("Stop: {0} asOf {1}", identifier, validAt);
+                Logger.DebugFormat("Stop: CachingMdmEntityService.Get {0} asOf {1}", identifier, validAt);
             }
         }
 
@@ -155,30 +171,47 @@
 
         public WebResponse<MdmId> GetMapping(int id, Predicate<MdmId> query)
         {
-            var response = this.Get(id);
-            if (response.IsValid)
+            try
             {
-                return new WebResponse<MdmId>
-                {
-                    Code = HttpStatusCode.OK,
-                    Message = response.Message.Identifiers.FirstOrDefault(mapping => query(mapping))
-                };
-            }
+                Logger.DebugFormat("Start : CachingMdmEntityService.GetMapping<{0}> - {1}", this.entityName, id);
 
-            return new WebResponse<MdmId>
+                var response = this.Get(id);
+                WebResponse<MdmId> webResponse;
+
+                if (response.IsValid)
+                {
+                    webResponse = new WebResponse<MdmId>
+                    {
+                        Code = HttpStatusCode.OK,
+                        Message = response.Message.Identifiers.FirstOrDefault(mapping => query(mapping))
+                    };
+                }
+                else
+                {
+                    webResponse = new WebResponse<MdmId>
+                    {
+                        Code = response.Code,
+                        Fault = response.Fault,
+                        IsValid = false
+                    };
+                }
+
+                webResponse.LogResponse();
+
+                return webResponse;
+            }
+            finally
             {
-                Code = response.Code,
-                Fault = response.Fault,
-                IsValid = false
-            };
+                Logger.DebugFormat("Stop : CachingMdmEntityService.GetMapping<{0}> - {1}", this.entityName, id);
+            }
         }
 
         public void Invalidate(int id)
         {
-            Logger.DebugFormat("Start: {0}", id);
+            Logger.DebugFormat("Start: CachingMdmEntityService.Invalidate {0}", id);
 
             try
-            {              
+            {
                 // We could not bother locking if the id is not in the cache, but if it is present
                 // we have to acquire it anyway, so take the hit - and quit quickly if we fail to match.
                 lock (this.syncLock)
@@ -199,7 +232,7 @@
             }
             finally
             {
-                Logger.DebugFormat("Stop: {0}", id);  
+                Logger.DebugFormat("Stop: CachingMdmEntityService.Invalidate {0}", id);
             }
         }
 
@@ -207,7 +240,7 @@
         {
             try
             {
-                Logger.DebugFormat("Start: '{0}' '{1}'", id, targetSystem);
+                Logger.DebugFormat("Start: CachingMdmEntityService.Map<{0}> - '{1}' '{2}'", this.entityName, id, targetSystem);
 
                 return this.GetMapping(
                     id,
@@ -215,7 +248,7 @@
             }
             finally
             {
-                Logger.DebugFormat("Stop: '{0}' '{1}'", id, targetSystem);                
+                Logger.DebugFormat("Stop: CachingMdmEntityService.Map<{0}> - '{1}' '{2}'", this.entityName, id, targetSystem);
             }
         }
 
@@ -233,18 +266,27 @@
         {
             try
             {
-                Logger.DebugFormat("Start: '{0}' '{1}' '{2}'", sourceSystem, identifier, targetSystem);
+                Logger.DebugFormat("Start: CachingMdmEntityService.CrossMap<{0}> - '{1}' '{2}' '{3}'", this.entityName, sourceSystem, identifier, targetSystem);
                 return this.service.CrossMap(sourceSystem, identifier, targetSystem);
             }
             finally
             {
-                Logger.DebugFormat("Stop: '{0}' '{1}' '{2}'", sourceSystem, identifier, targetSystem);
+                Logger.DebugFormat("Stop: CachingMdmEntityService.CrossMap<{0}>  - '{1}' '{2}' '{3}'", this.entityName, sourceSystem, identifier, targetSystem);
             }
         }
 
         public PagedWebResponse<IList<TContract>> Search(Search search)
         {
-            return this.service.Search(search);
+            try
+            {
+                Logger.DebugFormat("Start : CachingMdmEntityService.Search<{0}> ", this.entityName);
+                Logger.DebugFormat("CachingMdmEntityService.Search<{0}> : Calling search on Service", this.entityName);
+                return this.service.Search(search);
+            }
+            finally
+            {
+                Logger.DebugFormat("Stop : CachingMdmEntityService.Search<{0}>", this.entityName);
+            }
         }
 
         public WebResponse<TContract> Update(int id, TContract contract)
@@ -261,18 +303,18 @@
         {
             try
             {
-                Logger.Debug("Start");
+                Logger.DebugFormat("Start : CachingMdmEntityService.Create<{0}>", this.entityName);
                 var response = this.service.Create(contract, requestInfo);
                 if (response.IsValid)
                 {
                     this.ProcessContract(response);
                 }
-
+                response.LogResponse();
                 return response;
             }
             finally
             {
-                Logger.Debug("Stop");
+                Logger.DebugFormat("Stop : CachingMdmEntityService.Create<{0}>", this.entityName);
             }
         }
 
@@ -280,12 +322,12 @@
         {
             try
             {
-                Logger.Debug("Start");
+                Logger.DebugFormat("Start : CachingMdmEntityService.CreateMapping<{0}> - {1} {2}", this.entityName, id, identifier);
                 return this.service.CreateMapping(id, identifier);
             }
             finally
             {
-                Logger.Debug("Stop");
+                Logger.DebugFormat("Stop : CachingMdmEntityService.CreateMapping<{0}>", this.entityName);
             }
         }
 
@@ -293,12 +335,12 @@
         {
             try
             {
-                Logger.DebugFormat("Start: '{0}' '{1}'", entityId, mappingId);
+                Logger.DebugFormat("Start: CachingMdmEntityService.DeleteMapping<{0}> - '{1}' '{2}'", this.entityName, entityId, mappingId);
                 return this.service.DeleteMapping(entityId, mappingId);
             }
             finally
             {
-                Logger.DebugFormat("Stop: '{0}' '{1}'", entityId, mappingId);
+                Logger.DebugFormat("Stop: CachingMdmEntityService.DeleteMapping<{0}> - '{1}' '{2}'", this.entityName, entityId, mappingId);
             }
         }
 
@@ -309,79 +351,104 @@
 
         public WebResponse<TContract> Update(int id, TContract contract, string etag, MdmRequestInfo requestInfo)
         {
-            var response = this.service.Update(id, contract, etag, requestInfo);
-            if (response.IsValid)
+            try
             {
-                this.ProcessContract(response);
-            }
+                Logger.DebugFormat("Start : CachingMdmEntityService.Update<{0}> - {1}", this.entityName, id);
+                var response = this.service.Update(id, contract, etag, requestInfo);
+                if (response.IsValid)
+                {
+                    this.ProcessContract(response);
+                }
 
-            return response;
+                response.LogResponse();
+                return response;
+            }
+            finally
+            {
+                Logger.DebugFormat("Stop : CachingMdmEntityService.Update<{0}> - {1}", this.entityName, id);
+            }
         }
 
         private WebResponse<TContract> AcquireEntity(int id, Func<WebResponse<TContract>> finder)
         {
-            WebResponse<TContract> response;
-
-            // NB Problem with this is that we are single-threaded on requests
-            lock (this.syncLock)
+            try
             {
-                // Check if it exist now we are in a critical section
-                TContract entity;
-                if (this.entities.TryGetValue(id, out entity))
+                Logger.DebugFormat("Start : CachingMdmEntityService.AcquireEntity<{0}> - {1}", this.entityName, id);
+                WebResponse<TContract> response;
+
+                // NB Problem with this is that we are single-threaded on requests
+                lock (this.syncLock)
                 {
-                    response = new WebResponse<TContract>
+                    // Check if it exist now we are in a critical section
+                    TContract entity;
+                    if (this.entities.TryGetValue(id, out entity))
                     {
-                        Code = HttpStatusCode.OK,
-                        Message = entity
-                    };
+                        response = new WebResponse<TContract>
+                        {
+                            Code = HttpStatusCode.OK,
+                            Message = entity
+                        };
 
-                    response.LogResponse();
+                        response.LogResponse();
 
-                    return response;
+                        return response;
+                    }
+
+                    response = finder.Invoke();
+                    if (response.IsValid)
+                    {
+                        this.ProcessContract(response);
+                    }
                 }
 
-                response = finder.Invoke();
-                if (response.IsValid)
-                {
-                    this.ProcessContract(response);
-                }
+                return response;
             }
-
-            return response;
+            finally
+            {
+                Logger.DebugFormat("Stop : CachingMdmEntityService.AcquireEntity<{0}> - {1}", this.entityName, id);
+            }
         }
 
         private WebResponse<TContract> AcquireEntity(MdmId sourceIdentifier, Func<WebResponse<TContract>> finder)
         {
-            WebResponse<TContract> response;
-
-            // NB Problem with this is that we are single-threaded on requests
-            // Could break this out to a check, acquire contract via a queue, check; then process
-            // this would allow more requests to be submitted, 
-            lock (this.syncLock)
+            try
             {
-                int entityId;
-                if (this.mappings.TryGetValue(sourceIdentifier, out entityId))
+                Logger.DebugFormat("Start : CachingMdmEntityService.AcquireEntity<{0}> - {1}", this.entityName, sourceIdentifier);
+                WebResponse<TContract> response;
+
+                // NB Problem with this is that we are single-threaded on requests
+                // Could break this out to a check, acquire contract via a queue, check; then process
+                // this would allow more requests to be submitted,
+                lock (this.syncLock)
                 {
-                    // Can do this as we are in a locked section
-                    response = new WebResponse<TContract>
+                    int entityId;
+                    if (this.mappings.TryGetValue(sourceIdentifier, out entityId))
                     {
-                        Code = HttpStatusCode.OK,
-                        Message = this.entities[entityId]
-                    };
+                        // Can do this as we are in a locked section
+                        response = new WebResponse<TContract>
+                        {
+                            Code = HttpStatusCode.OK,
+                            Message = this.entities[entityId]
+                        };
 
-                    response.LogResponse();
+                        response.LogResponse();
 
-                    return response;
+                        return response;
+                    }
+
+                    response = finder.Invoke();
+                    if (response.IsValid)
+                    {
+                        this.ProcessContract(response);
+                    }
                 }
 
-                response = finder.Invoke();
-                if (response.IsValid)
-                {
-                    this.ProcessContract(response);
-                }
+                return response;
             }
-
-            return response;
+            finally
+            {
+                Logger.DebugFormat("Stop : CachingMdmEntityService.AcquireEntity<{0}> - {1}", this.entityName, sourceIdentifier);
+            }
         }
 
         private void ProcessContract(WebResponse<TContract> reponse)

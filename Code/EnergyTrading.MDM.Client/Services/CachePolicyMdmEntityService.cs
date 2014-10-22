@@ -464,11 +464,12 @@
             // NB Single-threaded on requests, but can't avoid that somewhere 
             lock (this.syncLock)
             {
-                Logger.DebugFormat("CachePolicyMdmEntityService.AcquireEntity - checking cache for {0}", sourceIdentifier.Identifier);
+                Logger.DebugFormat("CachePolicyMdmEntityService.AcquireEntity : checking cache for {0}", sourceIdentifier.Identifier);
 
                 var entity = cache.Get<TContract>(sourceIdentifier);
                 if (entity != null)
                 {
+                    Logger.DebugFormat("CachePolicyMdmEntityService.AcquireEntity : Found in cache {0}", sourceIdentifier.Identifier);
                     var webResponse = new WebResponse<TContract> { Code = HttpStatusCode.OK, Message = entity, IsValid = true };
                     webResponse.LogResponse();
                     return webResponse;
