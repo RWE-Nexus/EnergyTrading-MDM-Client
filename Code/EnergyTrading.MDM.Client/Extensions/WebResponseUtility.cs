@@ -23,13 +23,13 @@
             if (response.Fault != null)
             {
                 return MdmConstants.LogResponse
-                    ? serializer.Serialize(new { response.Code, response.Fault })
-                    : serializer.Serialize(new { response.Code, response.Fault, response.Message });
+                    ? serializer.Serialize(new { response.Code, response.Fault, response.Message })
+                    : serializer.Serialize(new { response.Code, response.Fault });
             }
 
             return MdmConstants.LogResponse
-                 ? serializer.Serialize(new { response.Code })
-                 : serializer.Serialize(new { response.Code, response.Message });
+                 ? serializer.Serialize(new { response.Code, response.Message })
+                 : serializer.Serialize(new { response.Code });
         }
 
         public static void LogResponse<T>(this WebResponse<T> response)
