@@ -25,6 +25,7 @@
         private readonly string deleteMappingUri;
         private readonly string searchUri;
         private readonly string validAtParam;
+        private readonly string entityName;
 
         private const string DateFormatString = "yyyy-MM-dd'T'HH:mm:ss.fffffffZ";
 
@@ -39,6 +40,7 @@
             this.crossMapUri = baseUri + "/crossmap?" + QueryConstants.SourceSystem + "={0}&" + QueryConstants.MappingValue + "={1}&" + QueryConstants.DestinationSystem + "={2}";
             this.searchUri = baseUri + "/search";
             this.validAtParam = "?" + QueryConstants.ValidAt + "={0}";
+            this.entityName = typeof (TContract).Name;
 
             this.requester = requester;
             this.etags = new Dictionary<int, string>();
@@ -81,7 +83,7 @@
         {
             if (Logger.IsDebugEnabled)
             {
-                Logger.DebugFormat("GetList<{0}>: {1} - {2}", typeof(TContract).Name, id);
+                Logger.DebugFormat("MdmEntityService.GetList<{0}>: {1} - {2}", typeof(TContract).Name, id);
             }
 
             var response = this.requester.Request<IList<TContract>>(string.Format(this.entityListUri, id));
@@ -95,7 +97,7 @@
         {
             if (Logger.IsDebugEnabled)
             {
-                Logger.DebugFormat("Get<{0}>: {1} - {2}", typeof(TContract).Name, id, validAt);
+                Logger.DebugFormat("MdmEntityService.Get<{0}>: {1} - {2}", typeof(TContract).Name, id, validAt);
             }
             return this.AcquireEntity(id, validAt);
         }
@@ -110,7 +112,7 @@
         {
             if (Logger.IsDebugEnabled)
             {
-                Logger.DebugFormat("Get<{0}>: {1} {2}", typeof(TContract).Name, identifier, validAt);
+                Logger.DebugFormat("MdmEntityService.Get<{0}>: {1} {2}", typeof(TContract).Name, identifier, validAt);
             }
             if (identifier == null)
             {
@@ -138,9 +140,11 @@
 
         public WebResponse<MdmId> GetMapping(int id, Predicate<MdmId> query)
         {
+            Logger.DebugFormat("Start : MdmEntityService.GetMapping<{0}> - {1}", this.entityName, id);
             var response = this.Get(id);
             if (response.IsValid)
             {
+                Logger.Debug("MdmEntityService.GetMapping : Valid response received. Fetching nexusId based on query");
                 var nexusId = response.Message.Identifiers.FirstOrDefault(mapping => query(mapping));
                 if (nexusId != null)
                 {
@@ -166,6 +170,8 @@
             };
 
             webResponse.LogResponse();
+
+            Logger.DebugFormat("Stop : MdmEntityService.GetMapping<{0}> - {1}", this.entityName, id);
 
             return webResponse;
         }
@@ -195,7 +201,7 @@
         {
             if (Logger.IsDebugEnabled)
             {
-                Logger.DebugFormat("CrossMap<{0}>: {1} {2} {3}", typeof(TContract).Name, sourceSystem, identifier, targetSystem);
+                Logger.DebugFormat("MdmEntityService.CrossMap<{0}>: {1} {2} {3}", typeof(TContract).Name, sourceSystem, identifier, targetSystem);
             }
 
             var response = this.requester.Request<MappingResponse>(string.Format(this.crossMapUri, sourceSystem, identifier, targetSystem));
@@ -214,7 +220,7 @@
         {
             if (Logger.IsDebugEnabled)
             {
-                Logger.DebugFormat("Search<{0}>", typeof(TContract).Name);
+                Logger.DebugFormat("MdmEntityService.Search<{0}>", typeof(TContract).Name);
             }
 
             var response = this.requester.Search<TContract>(this.searchUri, search);
@@ -244,7 +250,7 @@
         {
             if (Logger.IsDebugEnabled)
             {
-                Logger.DebugFormat("Create<{0}>", typeof(TContract).Name);
+                Logger.DebugFormat("MdmEntityService.Create<{0}>", typeof(TContract).Name);
             }
 
             var response = this.Create(this.BaseUri, contract, requestInfo);
@@ -263,7 +269,7 @@
         {
             if (Logger.IsDebugEnabled)
             {
-                Logger.DebugFormat("CreateMapping<{0}>: {1} - {2}", typeof(TContract).Name, id, identifier);
+                Logger.DebugFormat("MdmEntityService.CreateMapping<{0}>: {1} - {2}", this.entityName, id, identifier);
             }
             var mapping = new Mapping
             {
@@ -306,10 +312,12 @@
         {
             if (Logger.IsDebugEnabled)
             {
-                Logger.DebugFormat("DeleteMapping<{0}>: {1} - {2}", typeof(TContract).Name, entityId, mappingId);
+                Logger.DebugFormat("MdmEntityService.DeleteMapping<{0}>: {1} - {2}", this.entityName, entityId, mappingId);
             }
 
             var uri = string.Format(this.deleteMappingUri, entityId, mappingId);
+
+            Logger.DebugFormat("MdmEntityService.DeleteMapping : Uri - {0}", uri);
 
             var response = this.requester.Delete<TContract>(uri, requestInfo);
 
@@ -347,10 +355,14 @@
         {
             if (Logger.IsDebugEnabled)
             {
-                Logger.DebugFormat("Update<{0}>: {1} {2}", typeof(TContract).Name, id, etag);
+                Logger.DebugFormat("MdmEntityService.Update<{0}>: {1} {2}", this.entityName, id, etag);
             }
 
-            var response = this.requester.Update(string.Format(this.entityUri, id), etag, contract, requestInfo);
+            var uri = string.Format(this.entityUri, id);
+
+            Logger.DebugFormat("MdmEntityService.Update : Uri - {0}", uri);
+
+            var response = this.requester.Update(uri, etag, contract, requestInfo);
 
             response.LogResponse();
 
@@ -365,7 +377,11 @@
                 queryString = string.Format(this.validAtParam, contract.MdmSystemData.StartDate.Value.ToString(DateFormatString));
             }
 
-            var r2 = this.requester.Request<TContract>(response.Location + queryString);
+            string location = response.Location + queryString;
+
+            Logger.DebugFormat("MdmEntityService.Update : Received valid response. Now requesting - {0}", location);
+            
+            var r2 = this.requester.Request<TContract>(location);
 
             r2.RequestId = response.RequestId;
 
@@ -382,32 +398,49 @@
 
         private WebResponse<TContract> AcquireEntity(int id, DateTime? validAt)
         {
-            var uri = string.Format(this.entityUri, id);
-            if (validAt.HasValue)
+            try
             {
-                uri += string.Format(this.validAtParam, validAt.Value.ToString(DateFormatString));
+                Logger.DebugFormat("Start : MdmEntityService.AcquireEntity<{0}> - {1}", this.entityName, id);
+                var uri = string.Format(this.entityUri, id);
+                if (validAt.HasValue)
+                {
+                    uri += string.Format(this.validAtParam, validAt.Value.ToString(DateFormatString));
+                }
+
+
+                var response = this.GetContract(uri);
+
+                response.LogResponse();
+
+                return response;
             }
-
-            var response = this.GetContract(uri);
-
-            response.LogResponse();
-
-            return response;
+            finally
+            {
+                Logger.DebugFormat("Stop : MdmEntityService.AcquireEntity<{0}> - {1}", this.entityName, id);
+            }
         }
 
         private WebResponse<TContract> AcquireEntity(MdmId sourceIdentifier, DateTime? validAt)
         {
-            var uri = string.Format(this.mapUri, UrlEncode(sourceIdentifier.SystemName), UrlEncode(sourceIdentifier.Identifier));
-            if (validAt.HasValue)
+            try
             {
-                uri += string.Format(this.validAtParam, validAt.Value.ToString(DateFormatString));
+                Logger.DebugFormat("Start : MdmEntityService.AcquireEntity<{0}> - {1}", this.entityName, sourceIdentifier);
+                var uri = string.Format(this.mapUri, UrlEncode(sourceIdentifier.SystemName), UrlEncode(sourceIdentifier.Identifier));
+                if (validAt.HasValue)
+                {
+                    uri += string.Format(this.validAtParam, validAt.Value.ToString(DateFormatString));
+                }
+
+                var response = this.GetContract(uri);
+
+                response.LogResponse();
+
+                return response;
             }
-
-            var response = this.GetContract(uri);
-
-            response.LogResponse();
-
-            return response;
+            finally
+            {
+                Logger.DebugFormat("Stop : MdmEntityService.AcquireEntity<{0}> - {1}", this.entityName, sourceIdentifier);
+            }
         }
 
         private WebResponse<TMessage> Create<TMessage>(string uri, TMessage message, MdmRequestInfo requestInfo) where TMessage : class
@@ -417,22 +450,34 @@
 
         private WebResponse<TResponse> Create<TMessage, TResponse>(string uri, TMessage message, MdmRequestInfo requestInfo) where TResponse : class
         {
-            var request = this.requester.Create(uri, message, requestInfo);
-            var response = new WebResponse<TResponse> { Code = request.Code, IsValid = false, RequestId = request.RequestId, Fault = request.Fault };
-
-            if (request.IsValid)
+            try
             {
-                response = this.requester.Request<TResponse>(request.Location);
-                response.RequestId = request.RequestId;
+                Logger.DebugFormat("Start : MdmEntityService.Create : Uri - {0}", uri);
+
+                var request = this.requester.Create(uri, message, requestInfo);
+                var response = new WebResponse<TResponse> { Code = request.Code, IsValid = false, RequestId = request.RequestId, Fault = request.Fault };
+
+                if (request.IsValid)
+                {
+                    Logger.DebugFormat("MdmEntityService.Create : Valid Response received. Now requesting - {0}", request.Location);
+                    response = this.requester.Request<TResponse>(request.Location);
+                    response.RequestId = request.RequestId;
+                }
+
+                response.LogResponse();
+
+                return response;
             }
-
-            response.LogResponse();
-
-            return response;
+            finally
+            {
+                Logger.DebugFormat("Stop : MdmEntityService.Create");
+            }
         }
 
         private WebResponse<TContract> GetContract(string uri)
         {
+            Logger.DebugFormat("MdmEntityService.GetContract : Uri - {0}", uri);
+
             var entity = this.Request<TContract>(uri);
             if (entity.IsValid)
             {

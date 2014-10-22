@@ -25,7 +25,7 @@
         {
             if (Logger.IsDebugEnabled)
             {
-                Logger.DebugFormat("Create<{0}>", typeof(TContract).Name);
+                Logger.DebugFormat("MdmService.Create<{0}>", typeof(TContract).Name);
             }
             return this.factory.EntityService<TContract>(version).Create(contract);
         }
@@ -35,13 +35,17 @@
         {
             if (Logger.IsDebugEnabled)
             {
-                Logger.DebugFormat("CreateMapping<{0}>: {1} {2}", typeof(TContract).Name, id, identifier);
+                Logger.DebugFormat("MdmService.CreateMapping<{0}>: {1} {2}", typeof(TContract).Name, id, identifier);
             }
             return this.factory.EntityService<TContract>(version).CreateMapping(id, identifier);
         }
 
         public WebResponse<TContract> DeleteMapping<TContract>(int entityId, int mappingId, uint version = 0) where TContract : IMdmEntity
         {
+            if (Logger.IsDebugEnabled)
+            {
+                Logger.DebugFormat("MdmService.DeleteMapping<{0}> : {1} {2}", typeof(TContract).Name, entityId, mappingId);
+            }
             return this.factory.EntityService<TContract>(version).DeleteMapping(entityId, mappingId);
         }
 
@@ -55,7 +59,7 @@
         {
             if (Logger.IsDebugEnabled)
             {
-                Logger.DebugFormat("GetList<{0}>: {1}", typeof(TContract).Name, id);
+                Logger.DebugFormat("MdmService.GetList<{0}>: {1}", typeof(TContract).Name, id);
             }
             return this.factory.EntityService<TContract>(version).GetList(id);
         }
@@ -65,7 +69,7 @@
         {
             if (Logger.IsDebugEnabled)
             {
-                Logger.DebugFormat("Get<{0}>: {1} {2}", typeof(TContract).Name, id, asof);
+                Logger.DebugFormat("MdmService.Get<{0}>: {1} {2}", typeof(TContract).Name, id, asof);
             }
             return this.factory.EntityService<TContract>(version).Get(id, asof);
         }
@@ -81,7 +85,7 @@
         {
             if (Logger.IsDebugEnabled)
             {
-                Logger.DebugFormat("Get<{0}>: {1} {2}", typeof(TContract).Name, identifier, asof);
+                Logger.DebugFormat("MdmService.Get<{0}>: {1} {2}", typeof(TContract).Name, identifier, asof);
             }
             return this.factory.EntityService<TContract>(version).Get(identifier);
         }
@@ -89,6 +93,10 @@
         public WebResponse<MdmId> GetMapping<TContract>(int id, Predicate<MdmId> query, uint version = 0) 
             where TContract : IMdmEntity
         {
+            if (Logger.IsDebugEnabled)
+            {
+                Logger.DebugFormat("MdmService.GetMapping<{0}> : {1}", typeof(TContract).Name, id);
+            }
             return this.factory.EntityService<TContract>(version).GetMapping(id, query);
         }
 
@@ -97,7 +105,7 @@
         {
             if (Logger.IsDebugEnabled)
             {
-                Logger.DebugFormat("Map<{0}>: {1} {2}", typeof(TContract).Name, id, targetSystem);
+                Logger.DebugFormat("MdmService.Map<{0}>: {1} {2}", typeof(TContract).Name, id, targetSystem);
             }
             return this.factory.EntityService<TContract>(version).Map(id, targetSystem);
         }
@@ -113,7 +121,7 @@
         {
             if (Logger.IsDebugEnabled)
             {
-                Logger.DebugFormat("CrossMap<{0}>: {1} {2}", typeof(TContract).Name, identifier, targetSystem);
+                Logger.DebugFormat("MdmService.CrossMap<{0}>: {1} {2}", typeof(TContract).Name, identifier, targetSystem);
             }
             return this.factory.EntityService<TContract>(version).CrossMap(identifier, targetSystem);
         }
@@ -130,7 +138,7 @@
         {
             if (Logger.IsDebugEnabled)
             {
-                Logger.DebugFormat("CrossMap<{0}>: {1} {2} {3}", typeof(TContract).Name, sourceSystem, identifier, targetSystem);
+                Logger.DebugFormat("MdmService.CrossMap<{0}>: {1} {2} {3}", typeof(TContract).Name, sourceSystem, identifier, targetSystem);
             }
             return this.factory.EntityService<TContract>(version).CrossMap(sourceSystem, identifier, targetSystem); 
         }
@@ -138,6 +146,10 @@
         public void Invalidate<TContract>(int id, uint version = 0) 
             where TContract : IMdmEntity
         {
+            if (Logger.IsDebugEnabled)
+            {
+                Logger.DebugFormat("MdmService.Invalidate<{0}> : {1}", typeof(TContract).Name, id);
+            }
             this.factory.EntityService<TContract>(version).Invalidate(id);
         }
 
@@ -146,7 +158,7 @@
         {
             if (Logger.IsDebugEnabled)
             {
-                Logger.DebugFormat("Search<{0}>", typeof(TContract).Name);
+                Logger.DebugFormat("MdmService.Search<{0}>", typeof(TContract).Name);
             }
             return this.factory.EntityService<TContract>(version).Search(search);
         }
@@ -155,7 +167,7 @@
         {
             if (Logger.IsDebugEnabled)
             {
-                Logger.DebugFormat("Update<{0}>: {1} {2}", typeof(TContract).Name, id, etag);
+                Logger.DebugFormat("MdmService.Update<{0}>: {1} {2}", typeof(TContract).Name, id, etag);
             }
             return this.factory.EntityService<TContract>(version).Update(id, entity, etag);
         }
@@ -164,7 +176,7 @@
         {
             if (Logger.IsDebugEnabled)
             {
-                Logger.DebugFormat("Create<{0}>", typeof(TContract).Name);
+                Logger.DebugFormat("MdmService.Create<{0}>", typeof(TContract).Name);
             }
             return this.factory.EntityService<TContract>(version).Create(contract, requestInfo);
         }
@@ -173,13 +185,18 @@
         {
             if (Logger.IsDebugEnabled)
             {
-                Logger.DebugFormat("CreateMapping<{0}>: {1} {2}", typeof(TContract).Name, id, identifier);
+                Logger.DebugFormat("MdmService.CreateMapping<{0}>: {1} {2}", typeof(TContract).Name, id, identifier);
             }
             return this.factory.EntityService<TContract>(version).CreateMapping(id, identifier, requestInfo);
         }
 
         public WebResponse<TContract> DeleteMapping<TContract>(int entityId, int mappingId, MdmRequestInfo requestInfo, uint version = 0) where TContract : IMdmEntity
         {
+            if (Logger.IsDebugEnabled)
+            {
+                Logger.DebugFormat("MdmService.DeleteMapping<{0}> : {1} {2}", typeof(TContract).Name, entityId, mappingId);
+            }
+
             return this.factory.EntityService<TContract>(version).DeleteMapping(entityId, mappingId, requestInfo);
         }
 
@@ -187,7 +204,7 @@
         {
             if (Logger.IsDebugEnabled)
             {
-                Logger.DebugFormat("Update<{0}>: {1} {2}", typeof(TContract).Name, id, etag);
+                Logger.DebugFormat("MdmService.Update<{0}>: {1} {2}", typeof(TContract).Name, id, etag);
             }
             return this.factory.EntityService<TContract>(version).Update(id, contract, etag, requestInfo);
         }

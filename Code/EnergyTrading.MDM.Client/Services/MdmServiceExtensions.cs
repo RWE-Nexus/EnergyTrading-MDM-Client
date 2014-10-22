@@ -43,6 +43,7 @@ namespace EnergyTrading.Mdm.Client.Services
             var isServiceUnvailable = false;
             Fault fault = null;
 
+            logger.DebugFormat("Start : IMdmService.Try<{0}>", GetTypeName(typeof(T)));
             while (!response.IsValid && i++ < retries)
             {
                 response = func.Invoke();
@@ -167,6 +168,7 @@ namespace EnergyTrading.Mdm.Client.Services
         /// <returns>Result of the MDM action</returns>   
         public static WebResponse<T> TrySearch<T>(this IMdmService service, Func<WebResponse<T>> func, ILogger logger, int retries = 5, int sleep = 100)
         {
+            logger.DebugFormat("Start : IMdmService.TrySearch<{0}>", GetTypeName(typeof(T)));
             var response = new WebResponse<T> { IsValid = false };
             var i = 0;
             var isServiceUnvailable = false;

@@ -298,14 +298,14 @@
         {
             var key = this.ToSearchKey(search);
             Logger.DebugFormat("Start: CachePolicyMdmEntityService.Search<{0}>", key);
-            Logger.DebugFormat("Searching for key: {0} within the cache", key);
+            Logger.DebugFormat("CachePolicyMdmEntityService.Search : Searching for key: {0} within the cache", key);
             var result = this.CheckSearchCache(key);
             if (result == null)
             {
-                Logger.DebugFormat("Searching for key: {0} not been found within cache", key);
-                Logger.DebugFormat("calling the service to search with the key");
+                Logger.DebugFormat("CachePolicyMdmEntityService.Search : Searching for key: {0} not been found within cache", key);
+                Logger.DebugFormat("CachePolicyMdmEntityService.Search : calling the service to search with the key");
                 result = this.service.Search(search);
-                Logger.DebugFormat("Search completed with code {0}:", result.Code);
+                Logger.DebugFormat("CachePolicyMdmEntityService.Search : Search completed with code {0}:", result.Code);
 
                 lock (this.syncLock)
                 {
@@ -318,7 +318,7 @@
                     }
                     else
                     {
-                        Logger.DebugFormat("Adding the searched :", result.Code);
+                        Logger.DebugFormat("CachePolicyMdmEntityService.Search : Adding the searched :", result.Code);
                         this.searchCache.Add(key, result, this.cacheItemPolicyFactory.CreatePolicy());
                     }
                 }

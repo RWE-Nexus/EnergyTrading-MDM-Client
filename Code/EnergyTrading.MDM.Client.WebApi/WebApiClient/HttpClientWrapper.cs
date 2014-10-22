@@ -3,8 +3,8 @@ namespace EnergyTrading.Mdm.Client.WebApi.WebApiClient
     using System;
     using System.Net.Http;
     using System.Reflection;
-
     using EnergyTrading.Logging;
+    using EnergyTrading.Mdm.Client.WebApi.Extensions;
 
     /// <summary>
     /// Simple implementation of IHttpClient that uses the Microsoft ASP.Net Web API HttpClient
@@ -27,14 +27,18 @@ namespace EnergyTrading.Mdm.Client.WebApi.WebApiClient
 
         public HttpResponseMessage Get(string uri)
         {
-            Logger.DebugFormat("Get: {0}", uri);
-            return this.client.GetAsync(uri).Result;
+            Logger.DebugFormat("HttpClientWrapper.Get: {0}", uri);
+            var response= this.client.GetAsync(uri).Result;
+            response.LogResponse();
+            return response;
         }
 
         public HttpResponseMessage Delete(string uri)
         {
-            Logger.DebugFormat("Delete: {0}", uri);
-            return this.client.DeleteAsync(uri).Result;
+            Logger.DebugFormat("HttpClientWrapper.Delete: {0}", uri);
+            var response= this.client.DeleteAsync(uri).Result;
+            response.LogResponse();
+            return response;
         }
       
         public void Dispose()
@@ -44,13 +48,15 @@ namespace EnergyTrading.Mdm.Client.WebApi.WebApiClient
 
         public HttpResponseMessage Post(string uri, HttpContent content)
         {
-            Logger.DebugFormat("Post: {0}", uri);
-            return this.client.PostAsync(uri, content).Result;
+            Logger.DebugFormat("HttpClientWrapper.Post: {0}", uri);
+            var response= this.client.PostAsync(uri, content).Result;
+            response.LogResponse();
+            return response;
         }
 
         public void AddHeader(string key, string value)
         {
-            Logger.DebugFormat("Key: {0} Value: {0}", key, value);
+            Logger.DebugFormat("HttpClientWrapper.AddHeader : Key: {0} Value: {0}", key, value);
             this.client.DefaultRequestHeaders.Add(key, value);
         }
     }

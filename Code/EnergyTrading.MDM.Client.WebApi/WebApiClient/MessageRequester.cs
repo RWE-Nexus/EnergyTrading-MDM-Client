@@ -59,7 +59,7 @@
         /// <copydocfrom cref="IMessageRequester.Request{T}" />
         public WebResponse<TMessage> Request<TMessage>(string uri)
         {
-            Logger.DebugFormat("Start: {0}", uri);
+            Logger.DebugFormat("Start: MessageRequester.Request {0}", uri);
             var webResponse = new WebResponse<TMessage>();
 
             this.ResponseHandler(webResponse, uri, client =>
@@ -78,14 +78,14 @@
                 }
             });
 
-            Logger.DebugFormat("Finish: {0}", uri);
+            Logger.DebugFormat("Finish: MessageRequester.Request  {0}", uri);
             return webResponse;
         }
 
         /// <copydocfrom cref="IMessageRequester.Search{T}" />
         public PagedWebResponse<IList<TContract>> Search<TContract>(string uri, Search message)
         {
-            Logger.DebugFormat("Start: {0}", uri);
+            Logger.DebugFormat("Start: MessageRequester.Search {0}", uri);
 
             var result = new PagedWebResponse<IList<TContract>>
             {
@@ -103,12 +103,14 @@
                     {
                         if (response.StatusCode == HttpStatusCode.OK)
                         {
+                            Logger.Debug("MessageRequester.Search : Status OK - Reading the content from Response");
                             var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Ignore };
                             Stream stream = null;
                             var readTask = response.Content.ReadAsStreamAsync().ContinueWith(task =>
                                 {
                                     if (task.Exception != null)
                                     {
+                                        Logger.DebugFormat("MessageRequester.Search : Exception occurred while reading content asynchronously - {0}", task.Exception.Message);
                                         result.Code = HttpStatusCode.InternalServerError;
                                         result.IsValid = false;
                                         result.Fault = new Fault { Message = "Exception reading response stream : " + task.Exception.Message };
@@ -131,6 +133,7 @@
                                 }
                                 else
                                 {
+                                    Logger.Debug("MessageRequester.Search : Populating Message with the response received");
                                     result.Message = feed.Items.Select(syndicationItem => (XmlSyndicationContent)syndicationItem.Content).Select(syndic => syndic.ReadContent<TContract>()).ToList();
                                     result.Code = HttpStatusCode.OK;
 
@@ -156,7 +159,7 @@
                     }
                 });
 
-            Logger.DebugFormat("Finish: {0}", uri);
+            Logger.DebugFormat("Finish: MessageRequester.Search {0}", uri);
             return result;
         }
 
@@ -187,6 +190,7 @@
 
         private void PopulateWebResponse<T>(WebResponse<T> webResponse, HttpResponseMessage httpResponse, HttpStatusCode validCode)
         {
+            Logger.DebugFormat("MessageRequester.PopulateWebResponse<{0}> - Populating Web reponse", typeof(T).Name);
             webResponse.Code = httpResponse.StatusCode;
             webResponse.IsValid = this.faultHandler.Handle(httpResponse, validCode);
             if (!webResponse.IsValid)
@@ -242,7 +246,7 @@
 
         public WebResponse<TMessage> Create<TMessage>(string uri, TMessage message, MdmRequestInfo requestInfo)
         {
-            Logger.DebugFormat("Start: {0}", uri);
+            Logger.DebugFormat("Start: MessageRequester.Create {0}", uri);
 
             CheckAndPopulateRequestInfo(ref requestInfo);
 
@@ -268,14 +272,14 @@
                 }
             });
 
-            Logger.DebugFormat("Finish: {0}", uri);
+            Logger.DebugFormat("Finish: MessageRequester.Create {0}", uri);
 
             return webResponse;
         }
 
         public WebResponse<TMessage> Delete<TMessage>(string uri, MdmRequestInfo requestInfo)
         {
-            Logger.DebugFormat("Start: {0}", uri);
+            Logger.DebugFormat("Start: MessageRequester.Delete {0}", uri);
 
             CheckAndPopulateRequestInfo(ref requestInfo);
 
@@ -294,14 +298,14 @@
                 }
             });
 
-            Logger.DebugFormat("Finish: {0}", uri);
+            Logger.DebugFormat("Finish: MessageRequester.Delete {0}", uri);
 
             return webResponse;
         }
 
         public WebResponse<TMessage> Update<TMessage>(string uri, string etag, TMessage message, MdmRequestInfo requestInfo)
         {
-            Logger.DebugFormat("Start: {0}", uri);
+            Logger.DebugFormat("Start: MessageRequester.Update {0}", uri);
 
             CheckAndPopulateRequestInfo(ref requestInfo);
 
@@ -326,7 +330,7 @@
                 }
             });
 
-            Logger.DebugFormat("Finish: {0}", uri);
+            Logger.DebugFormat("Finish: MessageRequester.Update {0}", uri);
 
             return webResponse;
         }
